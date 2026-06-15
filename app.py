@@ -176,19 +176,28 @@ def register():
 
         conn = get_db_connection()
 
-        conn.execute(
-            """
-            INSERT INTO users
-            (username,email,password)
-            VALUES (?,?,?)
-            """,
-            (username,email,hashed_password)
-        )
+        try:
 
-        conn.commit()
-        conn.close()
+            conn.execute(
+                """
+                INSERT INTO users
+                (username, email, password)
+                VALUES (?, ?, ?)
+                """,
+                (username, email, hashed_password)
+            )
 
-        return redirect("/login")
+            conn.commit()
+
+            return redirect("/login")
+
+        except Exception as e:
+
+            return f"Registration Error: {e}"
+
+        finally:
+
+            conn.close()
 
     return render_template("register.html")
 

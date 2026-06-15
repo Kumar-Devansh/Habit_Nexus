@@ -428,3 +428,10 @@ label{
 .reject-btn:hover{
     opacity:0.9;
 }
+.error-box{
+    background:#ef4444;
+    color:white;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:15px;
+}
