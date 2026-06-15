@@ -113,9 +113,9 @@ def toggle(id):
         return redirect("/login")
 
     selected_date = request.args.get(
-    "date",
-    date.today().isoformat()
-)
+        "date",
+        date.today().isoformat()
+    )
 
     conn = get_db_connection()
 
@@ -126,7 +126,6 @@ def toggle(id):
         WHERE routine_id=?
         AND log_date=?
         """,
-        # (id, today)
         (id, selected_date)
     ).fetchone()
 
@@ -154,14 +153,15 @@ def toggle(id):
             (routine_id, log_date, completed)
             VALUES (?, ?, 1)
             """,
-            # (id, today)
             (id, selected_date)
         )
 
     conn.commit()
     conn.close()
 
-    return redirect("/dashboard")
+    return redirect(
+        f"/dashboard?date={selected_date}"
+    )
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -429,19 +429,19 @@ def get_heatmap_data(user_id):
 
     return data
 
-@app.route("/export-csv")
-def export_csv():
+@app.route("/download_csv")
+def download_csv():
 
     if "user_id" not in session:
         return redirect("/login")
 
     conn = get_db_connection()
 
-    data = conn.execute(
+    logs = conn.execute(
         """
         SELECT
-            tl.log_date,
             r.task_name,
+            tl.log_date,
             tl.completed
 
         FROM task_logs tl
@@ -450,7 +450,6 @@ def export_csv():
         ON tl.routine_id = r.id
 
         WHERE r.user_id = ?
-
         ORDER BY tl.log_date DESC
         """,
         (session["user_id"],)
@@ -458,22 +457,26 @@ def export_csv():
 
     conn.close()
 
-    def generate():
+    output = []
 
-        yield "Date,Task,Completed\n"
+    output.append(
+        "Date,Task,Completed\n"
+    )
 
-        for row in data:
+    for log in logs:
 
-            status = "Yes" if row["completed"] else "No"
-
-            yield f"{row['log_date']},{row['task_name']},{status}\n"
+        output.append(
+            f"{log['log_date']},"
+            f"{log['task_name']},"
+            f"{log['completed']}\n"
+        )
 
     return Response(
-        generate(),
+        "".join(output),
         mimetype="text/csv",
         headers={
             "Content-Disposition":
-            "attachment; filename=routine_history.csv"
+            "attachment; filename=routine_logs.csv"
         }
     )
 
@@ -738,6 +741,46 @@ def remove_friend(friend_id):
 
     return redirect("/my-friends")
 
+# def get_user_progress(user_id):
+
+#     conn = get_db_connection()
+
+#     selected_date = request.args.get(
+#         "date",
+#         date.today().isoformat()
+#     )
+
+#     stats = conn.execute(
+#         """
+#         SELECT
+#             COUNT(*) as total,
+#             COALESCE(
+#                 SUM(tl.completed),
+#                 0
+#             ) as completed
+
+#         FROM routines r
+
+#         LEFT JOIN task_logs tl
+#         ON r.id = tl.routine_id
+#         AND tl.log_date = ?
+
+#         WHERE r.user_id = ?
+#         """,
+#         (selected_date, user_id)
+#     ).fetchone()
+
+#     conn.close()
+
+#     total = stats["total"]
+
+#     if total == 0:
+#         return 0
+
+#     return round(
+#         (stats["completed"] / total) * 100
+#     )
+
 def get_user_progress(user_id):
 
     conn = get_db_connection()
@@ -766,13 +809,11 @@ def get_user_progress(user_id):
 
     conn.close()
 
-    total = stats["total"]
-
-    if total == 0:
+    if stats["total"] == 0:
         return 0
 
     return round(
-        (stats["completed"] / total) * 100
+        (stats["completed"] / stats["total"]) * 100
     )
 
 @app.route("/compare/<int:friend_id>")
@@ -819,6 +860,60 @@ def compare(friend_id):
         friend_score=friend_score,
         winner=winner
     )
+
+@app.route("/profile")
+def profile():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+
+    user = conn.execute(
+        """
+        SELECT *
+        FROM users
+        WHERE id=?
+        """,
+        (session["user_id"],)
+    ).fetchone()
+
+    routine_count = conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM routines
+        WHERE user_id=?
+        """,
+        (session["user_id"],)
+    ).fetchone()[0]
+
+    conn.close()
+
+    return render_template(
+        "profile.html",
+        user=user,
+        routine_count=routine_count
+    )
+
+@app.route("/delete-account")
+def delete_account():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+
+    conn.execute(
+        "DELETE FROM users WHERE id=?",
+        (session["user_id"],)
+    )
+
+    conn.commit()
+    conn.close()
+
+    session.clear()
+
+    return redirect("/register")
 
 if __name__ == "__main__":
     app.run(debug=True)

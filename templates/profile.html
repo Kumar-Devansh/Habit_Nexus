@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="profile-card">
+
+    <a href="/dashboard" class="back-btn">
+        ← Dashboard
+    </a>
+
+    <div class="profile-avatar">
+        👤
+    </div>
+
+    <h1>{{ user["username"] }}</h1>
+
+    <p>{{ user["email"] }}</p>
+
+    <div class="stats">
+
+        <div class="stat-box">
+            <h2>{{ routine_count }}</h2>
+            <p>Tasks</p>
+        </div>
+
+        <div class="stat-box">
+            <h2>🔥</h2>
+            <p>Active</p>
+        </div>
+
+    </div>
+
+    <div class="profile-actions">
+
+        <a href="/settings" class="settings-btn">
+            ⚙️ Edit Profile
+        </a>
+
+        <a href="/delete-account"
+           class="delete-account-btn">
+            🗑 Delete Account
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

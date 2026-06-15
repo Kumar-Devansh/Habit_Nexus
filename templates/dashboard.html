@@ -9,34 +9,32 @@
 
 <div class="container">
 
-    <!-- <h1>🔥 Routine Battle</h1> -->
+    <div class="dashboard-header">
 
-    <div class="header">
+        <h1>🔥 Routine Battle</h1>
 
-    <h1>🔥 Routine Battle</h1>
+        <div class="header-actions">
 
-    <div>
+            <a href="/profile" class="header-btn">
+                👤 Profile
+            </a>
 
-        <a
-            href="/settings"
-            class="settings-btn"
-        >
-            Settings
-        </a>
+            <a href="/settings" class="header-btn">
+                ⚙️ Settings
+            </a>
 
-        <a
-            href="/logout"
-            class="logout-btn"
-        >
-            Logout
-        </a>
+            <a href="/logout" class="logout-btn">
+                Logout
+            </a>
+
+        </div>
 
     </div>
-    <div class="card">
+    <div class="date-card">
 
-    <h3>📅 View Previous Day</h3>
+    <h3>📅 View Date</h3>
 
-    <form method="GET" action="/dashboard" class="date-filter">
+    <form method="GET" action="/dashboard">
 
         <input
             type="date"
@@ -52,13 +50,13 @@
 
 </div>
 
-</div>
+    </div>
 
     <div class="card">
 
         <h2>Add New Routine</h2>
 
-        <div class="stats-container">
+        <div class="stats-grid">
 
     <div class="stat-card">
         <h3>🔥 Streak</h3>
@@ -66,7 +64,7 @@
     </div>
 
     <div class="stat-card">
-        <h3>📋 Total Tasks</h3>
+        <h3>📋 Tasks</h3>
         <p>{{ total }}</p>
     </div>
 
@@ -80,27 +78,35 @@
         <p>{{ progress }}%</p>
     </div>
 
-<div class="nav-links">
+</div>
 
-    <a href="/friends" class="nav-btn">
+<div class="nav-links">
+<div class="quick-actions">
+
+    <a href="/friends" class="action-btn">
         👥 Friends
     </a>
 
-    <a href="/requests" class="nav-btn">
+    <a href="/requests" class="action-btn">
         📩 Requests
     </a>
 
-    <a href="/leaderboard" class="nav-btn">
+    <a href="/leaderboard" class="action-btn">
         🏆 Leaderboard
     </a>
 
+    <a href="/my-friends" class="action-btn">
+        🤝 My Friends
+    </a>
+
+    <a href="/download_csv" class="action-btn">
+        📄 Export CSV
+    </a>
+
 </div>
-<a href="/export-csv" class="csv-btn">
-    📄 Download CSV
-</a>
-<a href="/my-friends" class="nav-btn">
-    👥 My Friends
-</a>
+
+</div>
+
 </div>
 
         <form action="/add_routine" method="POST">
@@ -172,110 +178,31 @@
 
 </div>
 
-<!-- <div class="card">
 
-    <h2>Weekly Progress</h2>
-
-    <canvas id="weeklyChart"></canvas>
-
-</div> -->
-</div>
-<!-- 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const ctx = document.getElementById('weeklyChart');
-
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: [
-            'Mon',
-            'Tue',
-            'Wed',
-            'Thu',
-            'Fri',
-            'Sat',
-            'Sun'
-        ],
-        datasets: [{
-            label: 'Completion %',
-            data: [80,60,100,70,50,90,75]
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100
-            }
-        }
-    }
-});
-</script>
-<script>
-const progress = {{ progress }};
-
-new Chart(document.getElementById('weeklyChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Today'],
-        datasets: [{
-            label: 'Completion %',
-            data: [progress]
-        }]
-    },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100
-            }
-        }
-    }
-});
-</script> -->
 <div class="card">
 
-<h2>📅 Activity Heatmap</h2>
 
-<<div class="card">
+   <div class="heatmap">
 
-    <h2>📅 Activity Heatmap</h2>
+{% for day in heatmap_data %}
 
-    <div class="heatmap">
+    <div
+        class="
+        heat-cell
+        {% if day['completed'] == day['total'] %}
+            full
+        {% elif day['completed'] > 0 %}
+            partial
+        {% else %}
+            empty
+        {% endif %}
+        "
+        title="{{ day['log_date'] }} - {{ day['completed'] }}/{{ day['total'] }}"
+    ></div>
 
-        {% for day in heatmap_data %}
+{% endfor %}
 
-        {% set percent =
-            (day["completed"] / day["total"]) * 100
-        %}
-
-        <div
-            class="heat-cell
-            {% if percent == 100 %}
-                green
-            {% elif percent >= 50 %}
-                yellow
-            {% else %}
-                red
-            {% endif %}
-            "
-
-            title="
-            {{ day['log_date'] }}
-            - {{ percent|round }}%
-            "
-        >
-
-            {{ day['log_date'][8:] }}
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
+</div>
 </div>
 </body>
 </html>
