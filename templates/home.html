@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        HabitNexus
+    </title>
+
+    <!-- GOOGLE FONT -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- CSS -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/landing.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <!-- BACKGROUND BLUR -->
+
+    <div class="blur-circle blur-1"></div>
+    <div class="blur-circle blur-2"></div>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            HabitNexus
+        </div>
+
+        <div class="menu-toggle">
+
+            ☰
+
+        </div>
+
+        <div class="mobile-menu">
+
+            <ul class="nav-links">
+
+                <li>
+                    <a href="#features">
+                        Features
+                    </a>
+                </li>
+
+                <li>
+                    <a href="#workflow">
+                        Workflow
+                    </a>
+                </li>
+
+                <li>
+                    <a href="#contact">
+                        Contact
+                    </a>
+                </li>
+
+                <li>
+                    <a href="/login">
+                        Dashboard
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <div class="nav-buttons">
+
+            <a
+                href="/login"
+                class="login-btn"
+            >
+                Login
+            </a>
+
+            <a
+                href="/register"
+                class="start-btn"
+            >
+                Get Started
+            </a>
+
+        </div>
+
+    </nav>
+
+    <!-- HERO SECTION -->
+
+    <section class="hero">
+
+        <!-- LEFT -->
+
+        <div class="hero-left">
+
+            <span class="hero-badge">
+                🚀 Productivity + AI + Career Growth
+            </span>
+
+            <h1>
+                Build Better Habits.
+                <br>
+                Track Skills.
+                <br>
+                Grow Daily.
+            </h1>
+
+            <p>
+
+                HabitNexus helps students track habits,
+                DSA progress, analytics, productivity,
+                and career growth through one modern platform.
+
+            </p>
+
+            <div class="hero-buttons">
+
+                <a
+                    href="/register"
+                    class="primary-btn"
+                >
+                    Start Free
+                </a>
+
+                <a
+                    href="#"
+                    class="secondary-btn"
+                >
+                    Explore Features
+                </a>
+
+            </div>
+
+            <!-- STATS -->
+
+            <div class="hero-stats">
+
+                <div class="stat-card">
+
+                    <h2>10K+</h2>
+
+                    <p>Tasks Tracked</p>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <h2>2K+</h2>
+
+                    <p>Active Students</p>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <h2>95%</h2>
+
+                    <p>Consistency Growth</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div class="hero-right">
+
+            <div class="dashboard-preview">
+
+                <div class="preview-card top-card">
+
+                    <h3>
+                        Daily Progress
+                    </h3>
+
+                    <div class="progress-bar">
+
+                        <div class="progress-fill"></div>
+
+                    </div>
+
+                    <p>
+                        82% Completed
+                    </p>
+
+                </div>
+
+                <div class="preview-grid">
+
+                    <div class="mini-card">
+                        🔥 14 Day Streak
+                    </div>
+
+                    <div class="mini-card">
+                        📈 Analytics
+                    </div>
+
+                    <div class="mini-card">
+                        👥 Friends Hub
+                    </div>
+
+                    <div class="mini-card">
+                        💻 DSA Tracker
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FEATURES -->
+
+        <section
+            class="features reveal"
+            id="features"
+        >
+
+            <div class="section-title">
+
+                <h2>
+                    Powerful Features
+                </h2>
+
+                <p>
+                    Everything needed for productivity,
+                    consistency, coding growth,
+                    and career development.
+                </p>
+
+            </div>
+
+            <div class="feature-grid">
+
+                <div class="feature-card">
+
+                    <h3>
+                        📊 Analytics Dashboard
+                    </h3>
+
+                    <p>
+                        Track daily productivity,
+                        consistency trends,
+                        completion percentage,
+                        and visual progress reports.
+                    </p>
+
+                </div>
+
+                <div class="feature-card">
+
+                    <h3>
+                        🔥 Streak Tracking
+                    </h3>
+
+                    <p>
+                        Maintain daily streaks,
+                        build discipline,
+                        and improve consistency
+                        with activity tracking.
+                    </p>
+
+                </div>
+
+                <div class="feature-card">
+
+                    <h3>
+                        👥 Social Productivity
+                    </h3>
+
+                    <p>
+                        Add friends,
+                        compare progress,
+                        and stay motivated
+                        through productivity competition.
+                    </p>
+
+                </div>
+
+                <div class="feature-card">
+
+                    <h3>
+                        💻 DSA Progress Tracker
+                    </h3>
+
+                    <p>
+                        Track coding questions,
+                        monitor topic mastery,
+                        and improve interview preparation.
+                    </p>
+
+                </div>
+
+                <div class="feature-card">
+
+                    <h3>
+                        🤖 AI Resume Analyzer
+                    </h3>
+
+                    <p>
+                        Analyze resumes,
+                        improve formatting,
+                        and receive smart career insights.
+                    </p>
+
+                </div>
+
+                <div class="feature-card">
+
+                    <h3>
+                        🎯 Goal Management
+                    </h3>
+
+                    <p>
+                        Set long-term goals,
+                        monitor progress,
+                        and build structured growth habits.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+            
+    <!-- WORKFLOW -->
+
+    <section
+        class="workflow reveal"
+        id="workflow"
+    >
+
+        <div class="section-title">
+
+            <h2>
+                How HabitNexus Works
+            </h2>
+
+            <p>
+                A complete ecosystem for student growth.
+            </p>
+
+        </div>
+
+        <div class="workflow-container">
+
+            <div class="workflow-step">
+
+                <span>1</span>
+
+                <h3>
+                    Create Habits
+                </h3>
+
+                <p>
+                    Add routines,
+                    goals,
+                    and productivity tasks.
+                </p>
+
+            </div>
+
+            <div class="workflow-step">
+
+                <span>2</span>
+
+                <h3>
+                    Track Progress
+                </h3>
+
+                <p>
+                    Visualize consistency
+                    using analytics,
+                    heatmaps,
+                    and streaks.
+                </p>
+
+            </div>
+
+            <div class="workflow-step">
+
+                <span>3</span>
+
+                <h3>
+                    Improve Skills
+                </h3>
+
+                <p>
+                    Track DSA progress,
+                    coding practice,
+                    and interview preparation.
+                </p>
+
+            </div>
+
+            <div class="workflow-step">
+
+                <span>4</span>
+
+                <h3>
+                    Connect & Grow
+                </h3>
+
+                <p>
+                    Compare progress,
+                    add friends,
+                    and grow with accountability.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- CONTACT -->
+
+    <section
+        class="contact reveal"
+        id="contact"
+    >
+
+        <div class="contact-card">
+
+            <h2>
+                Get In Touch
+            </h2>
+
+            <p>
+                Want to collaborate,
+                contribute,
+                or connect?
+            </p>
+
+            <div class="contact-links">
+
+                <a href="#">
+                    📧 Email
+                </a>
+
+                <a href="#">
+                    💻 GitHub
+                </a>
+
+                <a href="#">
+                    🔗 LinkedIn
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+
+        <h2>
+            HabitNexus
+        </h2>
+
+        <p>
+            Track Habits. Build Skills. Grow Daily.
+        </p>
+
+        <div class="footer-links">
+
+            <a href="#">
+                Features
+            </a>
+
+            <a href="#">
+                Dashboard
+            </a>
+
+            <a href="#">
+                Contact
+            </a>
+
+            <a href="#">
+                GitHub
+            </a>
+
+        </div>
+
+    </footer>
+
+    <!-- SCROLL REVEAL -->
+<script>
+
+const reveals = document.querySelectorAll(".reveal");
+
+window.addEventListener(
+    "scroll",
+    () => {
+
+        reveals.forEach(
+            reveal => {
+
+                const windowHeight =
+                    window.innerHeight;
+
+                const revealTop =
+                    reveal.getBoundingClientRect().top;
+
+                const revealPoint = 120;
+
+                if(revealTop < windowHeight - revealPoint){
+
+                    reveal.classList.add("active");
+                }
+            }
+        );
+    }
+);
+
+</script>
+
+<script>
+
+const menuToggle =
+    document.querySelector(".menu-toggle");
+
+const mobileMenu =
+    document.querySelector(".mobile-menu");
+
+menuToggle.addEventListener(
+    "click",
+    () => {
+
+        mobileMenu.classList.toggle("active");
+    }
+);
+
+</script>
+
+</body>
+
+</html>

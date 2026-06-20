@@ -113,6 +113,61 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    # DSA PROFILE
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS dsa_profiles(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        user_id INTEGER,
+
+        leetcode_username TEXT
+    )
+    """)
+
+    # DSA TOPICS
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS dsa_topics(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        user_id INTEGER,
+
+        topic_name TEXT,
+
+        completed INTEGER DEFAULT 0,
+
+        target INTEGER DEFAULT 0
+    )
+    """)
+
+    # PENDING TOPICS
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS pending_topics(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        user_id INTEGER,
+
+        topic_name TEXT
+    )
+    """)
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS dsa_history(
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        user_id INTEGER,
+
+        solved_count INTEGER,
+
+        log_date TEXT
+    )
+    """)
+
 
     conn.commit()
 

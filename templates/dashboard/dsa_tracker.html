@@ -1,33 +1,719 @@
 {% extends "layout/base.html" %}
 
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/dsa.css') }}"
+>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+{% endblock %}
+
 {% block content %}
 
-<h1>
-    DSA Progress Tracker 💻
-</h1>
+<!-- HERO -->
 
-<div class="stats-grid">
+<section class="dsa-hero">
+
+    <div class="hero-content">
+
+        <span class="hero-badge">
+            🚀 Advanced Coding Analytics
+        </span>
+
+        <h1>
+            DSA Command Center
+        </h1>
+
+        <p>
+            Track coding progress,
+            analyze LeetCode performance,
+            manage syllabus,
+            and build interview readiness.
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="#topic-section">
+                Start Tracking
+            </a>
+
+            <a href="#leetcode-section">
+                Sync Profile
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="hero-glow"></div>
+
+</section>
+
+<!-- LIVE STATS -->
+
+{% if leetcode_data
+and leetcode_data["data"]
+and leetcode_data["data"]["matchedUser"] %}
+
+{% set profile_data =
+leetcode_data["data"]["matchedUser"]["profile"]
+%}
+
+<section class="stats-grid">
 
     <div class="stat-card">
-        <h3>Arrays</h3>
-        <h1>80%</h1>
+        <h2>{{ total_solved }}</h2>
+        <p>Total Solved</p>
     </div>
 
     <div class="stat-card">
-        <h3>Linked List</h3>
-        <h1>65%</h1>
+        <h2>{{ easy_count }}</h2>
+        <p>Easy</p>
     </div>
 
     <div class="stat-card">
-        <h3>Trees</h3>
-        <h1>40%</h1>
+        <h2>{{ medium_count }}</h2>
+        <p>Medium</p>
     </div>
 
     <div class="stat-card">
-        <h3>Graphs</h3>
-        <h1>25%</h1>
+        <h2>{{ hard_count }}</h2>
+        <p>Hard</p>
     </div>
 
-</div>
+    <div class="stat-card">
+        <h2>#{{ profile_data["ranking"] }}</h2>
+        <p>Ranking</p>
+    </div>
+
+</section>
+
+{% endif %}
+
+<!-- TOPIC ANALYTICS -->
+
+<section class="leetcode-topics">
+
+    <div class="section-title">
+
+        <h2>
+            📚 Topic-wise Analytics
+        </h2>
+
+        <p>
+            Real LeetCode topic distribution
+        </p>
+
+    </div>
+
+    <div class="leetcode-topic-grid">
+
+        {% if topic_analytics %}
+
+            {% for topic in topic_analytics %}
+
+            <div class="leetcode-topic-card">
+
+                <h3>
+                    {{ topic.tagName }}
+                </h3>
+
+                <span>
+                    {{ topic.problemsSolved }} solved
+                </span>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No analytics available.</p>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+<!-- WEAK AREAS -->
+
+<section class="weak-section">
+
+    <div class="section-title">
+
+        <h2>
+            🧠 Weak Areas
+        </h2>
+
+        <p>
+            Topics needing improvement
+        </p>
+
+    </div>
+
+    <div class="weak-grid">
+
+        {% if weak_topics %}
+
+            {% for topic in weak_topics %}
+
+            <div class="weak-card">
+
+                <h3>
+                    {{ topic.tagName }}
+                </h3>
+
+                <span>
+                    {{ topic.problemsSolved }} solved
+                </span>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No weak areas detected.</p>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+<!-- CHARTS -->
+
+<section class="analytics-grid">
+
+    <div class="analytics-card">
+
+        <div class="section-title">
+
+            <h2>
+                🎯 Problem Distribution
+            </h2>
+
+        </div>
+
+        <div id="radialChart"></div>
+
+    </div>
+
+    <div class="analytics-card">
+
+        <div class="section-title">
+
+            <h2>
+                📊 Weekly Activity
+            </h2>
+
+        </div>
+
+        <div id="barChart"></div>
+
+    </div>
+
+</section>
+
+<!-- STREAKS -->
+
+<section class="streak-grid">
+
+    <div class="streak-card">
+
+        <h2>
+            🔥 {{ streak }}
+        </h2>
+
+        <p>
+            Current Streak
+        </p>
+
+    </div>
+
+    <div class="streak-card">
+
+        <h2>
+            ⚡ {{ total_solved }}
+        </h2>
+
+        <p>
+            Total Solved
+        </p>
+
+    </div>
+
+    <div class="streak-card">
+
+        <h2>
+            🧠 {{ topics|length }}
+        </h2>
+
+        <p>
+            Active Topics
+        </p>
+
+    </div>
+
+    <div class="streak-card">
+
+        <h2>
+            🚀 {{ pending_topics|length }}
+        </h2>
+
+        <p>
+            Pending Topics
+        </p>
+
+    </div>
+
+</section>
+
+<!-- READINESS -->
+
+<section class="readiness-section">
+
+    <div class="readiness-card">
+
+        <h2>
+            🎯 Interview Readiness
+        </h2>
+
+        <div class="score-circle">
+
+            {{ readiness_score }}%
+
+        </div>
+
+        <p>
+            Based on consistency,
+            topic coverage,
+            and solved problems.
+        </p>
+
+    </div>
+
+</section>
+
+<!-- HEATMAP -->
+
+<section class="heatmap-section">
+
+    <div class="section-title">
+
+        <h2>
+            🔥 Daily Coding Heatmap
+        </h2>
+
+        <p>
+            Visualize your consistency
+        </p>
+
+    </div>
+
+    <div class="heatmap-grid">
+
+        {% for item in history %}
+
+        <div
+            class="
+            heat-cell
+            {% if item.solved_count > 0 %}
+                level-1
+            {% endif %}
+            {% if item.solved_count > 3 %}
+                level-2
+            {% endif %}
+            {% if item.solved_count > 6 %}
+                level-3
+            {% endif %}
+            "
+            title="{{ item.log_date }}"
+        ></div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+<!-- LEETCODE -->
+
+<section
+    class="leetcode-section"
+    id="leetcode-section"
+>
+
+    <div class="section-title">
+
+        <h2>
+            🔗 LeetCode Auto Sync
+        </h2>
+
+        <p>
+            Fetch live coding analytics instantly
+        </p>
+
+    </div>
+
+    <form
+        method="POST"
+        action="/save_leetcode"
+        class="leetcode-form"
+    >
+
+        <input
+            type="text"
+            name="leetcode_username"
+            placeholder="Enter LeetCode Username"
+            value="{{ profile.leetcode_username if profile else '' }}"
+        >
+
+        <button type="submit">
+
+            Sync Now
+
+        </button>
+
+    </form>
+
+</section>
+
+<!-- TOPIC PROGRESS -->
+
+<section
+    class="topic-section"
+    id="topic-section"
+>
+
+    <div class="section-title">
+
+        <h2>
+            📚 Topic Progress System
+        </h2>
+
+        <p>
+            Track DSA topic completion smartly
+        </p>
+
+    </div>
+
+    <form
+        action="/add_dsa_topic"
+        method="POST"
+        class="topic-add-form"
+    >
+
+        <input
+            type="text"
+            name="topic_name"
+            placeholder="Topic Name"
+            required
+        >
+
+        <input
+            type="number"
+            name="completed"
+            placeholder="Solved"
+            required
+        >
+
+        <input
+            type="number"
+            name="target"
+            placeholder="Target"
+            required
+        >
+
+        <button type="submit">
+            Add Topic
+        </button>
+
+    </form>
+
+    <div class="topic-grid">
+
+        {% for topic in topics %}
+
+        {% set progress =
+        ((topic.completed / topic.target) * 100)
+        if topic.target > 0 else 0 %}
+
+        <div class="topic-card">
+
+            <div class="topic-top">
+
+                <h3>
+                    {{ topic.topic_name }}
+                </h3>
+
+                <span>
+                    {{ topic.completed }}/{{ topic.target }}
+                </span>
+
+            </div>
+
+            <div class="progress-wrapper">
+
+                <div
+                    class="progress-fill"
+                    style="width: {{ [progress,100]|min }}%;"
+                ></div>
+
+            </div>
+
+            <form
+                action="/update_dsa_topic/{{ topic.id }}"
+                method="POST"
+                class="update-form"
+            >
+
+                <input
+                    type="number"
+                    name="completed"
+                    value="{{ topic.completed }}"
+                >
+
+                <input
+                    type="number"
+                    name="target"
+                    value="{{ topic.target }}"
+                >
+
+                <button type="submit">
+
+                    Update
+
+                </button>
+
+            </form>
+
+            <a
+                href="/delete_dsa_topic/{{ topic.id }}"
+                class="delete-btn"
+            >
+
+                Delete
+
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+<!-- PENDING -->
+
+<section class="pending-section">
+
+    <div class="section-title">
+
+        <h2>
+            🧠 Pending Syllabus
+        </h2>
+
+        <p>
+            Remaining topics to master
+        </p>
+
+    </div>
+
+    <form
+        action="/add_pending_topic"
+        method="POST"
+        class="pending-form"
+    >
+
+        <input
+            type="text"
+            name="topic_name"
+            placeholder="Pending Topic"
+            required
+        >
+
+        <button type="submit">
+
+            Add
+
+        </button>
+
+    </form>
+
+    <div class="pending-grid">
+
+        {% for topic in pending_topics %}
+
+        <div class="pending-card">
+
+            <span>
+                {{ topic.topic_name }}
+            </span>
+
+            <a
+                href="/delete_pending_topic/{{ topic.id }}"
+                class="pending-delete"
+            >
+
+                ✕
+
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+<!-- INSIGHTS -->
+
+<section class="insight-section">
+
+    <div class="section-title">
+
+        <h2>
+            ⚡ Smart Progress Insights
+        </h2>
+
+    </div>
+
+    <div class="insight-grid">
+
+        <div class="insight-card">
+
+            <h3>
+                Current Focus
+            </h3>
+
+            <p>
+                Stay consistent with daily coding.
+            </p>
+
+        </div>
+
+        <div class="insight-card">
+
+            <h3>
+                Improvement Area
+            </h3>
+
+            <p>
+                Increase medium & hard problems.
+            </p>
+
+        </div>
+
+        <div class="insight-card">
+
+            <h3>
+                Interview Readiness
+            </h3>
+
+            <p>
+                Strong consistency improves confidence.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- FLOATING BUTTON -->
+
+<button class="floating-btn">
+
+    ⚡
+
+</button>
+
+<!-- APEXCHARTS -->
+
+<script>
+
+var radialOptions = {
+
+    series:[
+
+        {{ easy_count }},
+        {{ medium_count }},
+        {{ hard_count }}
+
+    ],
+
+    chart:{
+
+        type:'donut',
+
+        height:350
+    },
+
+    labels:[
+        'Easy',
+        'Medium',
+        'Hard'
+    ],
+
+    legend:{
+        position:'bottom'
+    }
+}
+
+var radialChart =
+new ApexCharts(
+
+    document.querySelector("#radialChart"),
+
+    radialOptions
+)
+
+radialChart.render()
+
+var barOptions = {
+
+    series:[{
+
+        name:'Solved',
+
+        data:{{ weekly_counts|tojson }}
+    }],
+
+    chart:{
+
+        type:'bar',
+
+        height:350,
+
+        toolbar:{
+            show:false
+        }
+    },
+
+    xaxis:{
+
+        categories:
+        {{ weekly_labels|tojson }}
+    }
+}
+
+var barChart =
+new ApexCharts(
+
+    document.querySelector("#barChart"),
+
+    barOptions
+)
+
+barChart.render()
+
+</script>
 
 {% endblock %}

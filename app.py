@@ -5,6 +5,10 @@ from flask import (
     redirect,
     session
 )
+import requests
+import csv
+from io import StringIO
+
 from datetime import date, timedelta
 from database import (
     get_db_connection,
@@ -39,7 +43,10 @@ init_db()
 @app.route("/")
 def home():
 
-    return redirect("/login")
+    return render_template(
+        "home.html"
+    )
+
 @app.route("/dashboard")
 def dashboard():
 
@@ -457,16 +464,6 @@ def search_users():
     return render_template(
         "friends/search_users.html",
         users=users
-    )
-@app.route("/dsa-tracker")
-def dsa_tracker():
-
-    if "user_id" not in session:
-
-        return redirect("/login")
-
-    return render_template(
-        "dashboard/dsa_tracker.html"
     )
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
@@ -1184,8 +1181,709 @@ def friend_profile(user_id):
         total_tasks=total_tasks,
         completed_tasks=completed_tasks
     )
+
+def fetch_leetcode_data(username):
+
+    url = "https://leetcode.com/graphql"
+
+    query = """
+    query userProfile($username: String!) {
+
+      matchedUser(username: $username) {
+
+        submitStats {
+          acSubmissionNum {
+            difficulty
+            count
+          }
+        }
+
+        tagProblemCounts {
+          advanced {
+            tagName
+            problemsSolved
+          }
+
+          intermediate {
+            tagName
+            problemsSolved
+          }
+
+          fundamental {
+            tagName
+            problemsSolved
+          }
+        }
+
+        profile {
+          ranking
+          reputation
+        }
+      }
+    }
+    """
+
+    variables = {
+        "username": username
+    }
+
+    response = requests.post(
+
+        url,
+
+        json={
+            "query": query,
+            "variables": variables
+        }
+    )
+
+    return response.json()
+
+@app.route("/dsa_tracker")
+def dsa_tracker():
+        # =========================
+    # DEFAULT SAFE VALUES
+    # =========================
+
+    topic_analytics = []
+
+    weak_topics = []
+
+    readiness_score = 0
+
+    easy_count = 0
+
+    medium_count = 0
+
+    hard_count = 0
+
+    total_solved = 0
+
+    streak = 0
+
+    weekly_counts = [0, 0, 0, 0, 0, 0, 0]
+
+    weekly_labels = [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+    ]
+
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+
+    # LEETCODE USERNAME
+
+    profile = conn.execute(
+        """
+        SELECT *
+        FROM dsa_profiles
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchone()
+
+
+    if profile:
+
+        username = profile["leetcode_username"]
+
+        query = """
+        query userPublicProfile($username: String!) {
+
+            matchedUser(username: $username) {
+
+                username
+
+                profile {
+                    ranking
+                    reputation
+                }
+
+                submitStats {
+                    acSubmissionNum {
+                        difficulty
+                        count
+                    }
+                }
+
+                tagProblemCounts {
+
+                    advanced {
+                        tagName
+                        problemsSolved
+                    }
+
+                    intermediate {
+                        tagName
+                        problemsSolved
+                    }
+
+                    fundamental {
+                        tagName
+                        problemsSolved
+                    }
+                }
+
+                badges {
+                    name
+                }
+            }
+        }
+        """
+
+
+        variables = {
+            "username": username
+        }
+
+        try:
+            response = requests.post(
+                "https://leetcode.com/graphql",
+                json={
+                    "query": query,
+                    "variables": variables
+                },
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                leetcode_data = response.json()
+            else:
+                leetcode_data = None
+
+        except requests.RequestException:
+            leetcode_data = None
+
+        
+            if (
+                leetcode_data.get("data")
+                and leetcode_data["data"].get("matchedUser")
+            ):
+
+                user_data = leetcode_data["data"]["matchedUser"]
+
+                stats = user_data["submitStats"]["acSubmissionNum"]
+
+                total_solved = stats[0]["count"]
+
+                today = date.today().isoformat()
+
+                existing = conn.execute(
+                    """
+                    SELECT id
+                    FROM dsa_history
+                    WHERE user_id = ?
+                    AND log_date = ?
+                    """,
+                    (
+                        user_id,
+                        today
+                    )
+                ).fetchone()
+
+                if existing:
+
+                    conn.execute(
+                        """
+                        UPDATE dsa_history
+                        SET solved_count = ?
+                        WHERE id = ?
+                        """,
+                        (
+                            total_solved,
+                            existing["id"]
+                        )
+                    )
+
+                else:
+
+                    conn.execute(
+                        """
+                        INSERT INTO dsa_history(
+                            user_id,
+                            solved_count,
+                            log_date
+                        )
+                        VALUES(?,?,?)
+                        """,
+                        (
+                            user_id,
+                            total_solved,
+                            today
+                        )
+                    )
+                
+                topic_analytics = []
+
+                weak_topics = []
+
+                readiness_score = 0
+
+                if leetcode_data \
+                and leetcode_data.get("data") \
+                and leetcode_data["data"].get("matchedUser"):
+
+                    tag_data = (
+                        leetcode_data["data"]
+                        ["matchedUser"]
+                        .get("tagProblemCounts")
+                    )
+
+                    if not tag_data:
+                        tag_data = {
+                            "advanced": [],
+                            "intermediate": [],
+                            "fundamental": []
+                        }
+
+                    all_topics = (
+                        tag_data["advanced"] +
+                        tag_data["intermediate"] +
+                        tag_data["fundamental"]
+                    )
+
+                    # SORT TOPICS
+
+                    all_topics = sorted(
+
+                        all_topics,
+
+                        key=lambda x: x["problemsSolved"],
+
+                        reverse=True
+                    )
+
+                    topic_analytics = all_topics[:8]
+
+                    # WEAK TOPICS
+
+                    weak_topics = [
+
+                        topic for topic in all_topics
+
+                        if topic["problemsSolved"] < 5
+                    ][:5]
+
+                    # READINESS SCORE
+
+                    total = sum([
+                        x["problemsSolved"]
+                        for x in all_topics
+                    ])
+
+                    readiness_score = min(
+
+                        int(total / 4),
+
+                        100
+                    )
+
+
+                
+
+                conn.commit()
+
+            
+
+    # TOPICS
+
+    topics = conn.execute(
+        """
+        SELECT *
+        FROM dsa_topics
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchall()
+
+    # PENDING
+
+    pending_topics = conn.execute(
+        """
+        SELECT *
+        FROM pending_topics
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchall()
+
+    history = conn.execute(
+        """
+        SELECT *
+        FROM dsa_history
+        WHERE user_id = ?
+        ORDER BY log_date
+        """,
+        (user_id,)
+    ).fetchall()
+
     
 
+    # =========================
+    # WEEKLY ANALYTICS
+    # =========================
+
+    weekly_data = conn.execute("""
+
+    SELECT
+        solved_count,
+        log_date
+    FROM dsa_history
+    WHERE user_id=?
+    ORDER BY log_date DESC
+    LIMIT 7
+
+    """,(session["user_id"],)).fetchall()
+
+    weekly_data = weekly_data[::-1]
+
+    weekly_labels = [
+        row["log_date"]
+        for row in weekly_data
+    ]
+
+    weekly_counts = [
+        row["solved_count"]
+        for row in weekly_data
+    ]
+
+    # =========================
+    # TOTAL PROBLEMS
+    # =========================
+
+    easy_count = 0
+    medium_count = 0
+    hard_count = 0
+
+    if leetcode_data \
+    and leetcode_data.get("data") \
+    and leetcode_data["data"].get("matchedUser"):
+
+        stats = (
+            leetcode_data["data"]
+            ["matchedUser"]
+            ["submitStats"]
+            ["acSubmissionNum"]
+        )
+
+        difficulty_map = {
+            item["difficulty"]: item["count"]
+            for item in stats
+        }
+
+        easy_count = difficulty_map.get("Easy", 0)
+        medium_count = difficulty_map.get("Medium", 0)
+        hard_count = difficulty_map.get("Hard", 0)
+    total_solved = (
+        easy_count +
+        medium_count +
+        hard_count
+    )
+
+    # =========================
+    # STREAK CALCULATION
+    # =========================
+
+    streak = len([
+        x for x in weekly_counts
+        if x > 0
+    ])
+
+    
+
+    conn.close()
+
+    return render_template(
+        "dashboard/dsa_tracker.html",
+        profile=profile,
+        leetcode_data=leetcode_data,
+        topics=topics,
+        pending_topics=pending_topics,
+        history=history,
+        weekly_labels=weekly_labels,
+        weekly_counts=weekly_counts,
+        easy_count=easy_count,
+        medium_count=medium_count,
+        hard_count=hard_count,
+        total_solved=total_solved,
+        streak=streak,
+        topic_analytics=topic_analytics,
+
+        weak_topics=weak_topics,
+
+        readiness_score=readiness_score,
+
+    )
+
+@app.route(
+    "/add_dsa_topic",
+    methods=["POST"]
+)
+def add_dsa_topic():
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    topic_name = request.form["topic_name"]
+
+    completed = request.form["completed"]
+
+    target = request.form["target"]
+
+    conn = get_db_connection()
+
+    conn.execute(
+        """
+        INSERT INTO dsa_topics(
+            user_id,
+            topic_name,
+            completed,
+            target
+        )
+        VALUES(?,?,?,?)
+        """,
+        (
+            user_id,
+            topic_name,
+            completed,
+            target
+        )
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    return redirect("/dsa_tracker")
+
+@app.route(
+    "/add_pending_topic",
+    methods=["POST"]
+)
+def add_pending_topic():
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    topic_name = request.form["topic_name"]
+
+    conn = get_db_connection()
+
+    conn.execute(
+        """
+        INSERT INTO pending_topics(
+            user_id,
+            topic_name
+        )
+        VALUES(?,?)
+        """,
+        (
+            user_id,
+            topic_name
+        )
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    return redirect("/dsa_tracker")
+
+@app.route(
+    "/save_leetcode",
+    methods=["POST"]
+)
+def save_leetcode():
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    username = request.form["leetcode_username"]
+
+    conn = get_db_connection()
+
+    existing = conn.execute(
+        """
+        SELECT *
+        FROM dsa_profiles
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchone()
+
+    if existing:
+
+        conn.execute(
+            """
+            UPDATE dsa_profiles
+            SET leetcode_username = ?
+            WHERE user_id = ?
+            """,
+            (
+                username,
+                user_id
+            )
+        )
+
+    else:
+
+        conn.execute(
+            """
+            INSERT INTO dsa_profiles(
+                user_id,
+                leetcode_username
+            )
+            VALUES(?,?)
+            """,
+            (
+                user_id,
+                username
+            )
+        )
+
+    conn.commit()
+
+    conn.close()
+
+    return redirect("/dsa_tracker")
+
+@app.route("/export_dsa_csv")
+def export_dsa_csv():
+
+    if "user_id" not in session:
+
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+
+    topics = conn.execute(
+        """
+        SELECT *
+        FROM dsa_topics
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchall()
+
+    conn.close()
+
+    output = StringIO()
+
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "Topic",
+        "Completed",
+        "Target"
+    ])
+
+    for topic in topics:
+
+        writer.writerow([
+            topic["topic_name"],
+            topic["completed"],
+            topic["target"]
+        ])
+
+    output.seek(0)
+
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+            "attachment;filename=dsa_progress.csv"
+        }
+    )
+
+@app.route("/delete_dsa_topic/<int:id>")
+def delete_dsa_topic(id):
+
+    conn = get_db_connection()
+
+    conn.execute(
+        """
+        DELETE FROM dsa_topics
+        WHERE id = ?
+        """,
+        (id,)
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    return redirect("/dsa_tracker")
+
+@app.route(
+    "/update_dsa_topic/<int:id>",
+    methods=["POST"]
+)
+def update_dsa_topic(id):
+
+    completed = request.form["completed"]
+
+    target = request.form["target"]
+
+    conn = get_db_connection()
+
+    conn.execute(
+        """
+        UPDATE dsa_topics
+        SET completed = ?,
+            target = ?
+        WHERE id = ?
+        """,
+        (
+            completed,
+            target,
+            id
+        )
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    return redirect("/dsa_tracker")
+
+@app.route("/delete_pending_topic/<int:id>")
+def delete_pending_topic(id):
+
+    conn = get_db_connection()
+
+    conn.execute(
+        "DELETE FROM pending_topics WHERE id=?",
+        (id,)
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    return redirect("/dsa_tracker")
 
 
 if __name__ == "__main__":
