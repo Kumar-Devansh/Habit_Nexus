@@ -1,4 +1,3 @@
-
 {% extends "layout/base.html" %}
 
 {% block content %}
@@ -12,36 +11,79 @@
     <div class="calendar-header">
 
         <h2>
-            June 2026
+            {{ month_name }} {{ year }}
         </h2>
 
     </div>
 
+    <div id="dayModal" class="modal">
+
+    <div class="modal-content">
+
+        <h2 id="modalDate"></h2>
+
+        <div id="modalTasks"></div>
+
+        <button onclick="closeModal()">
+            Close
+        </button>
+
+    </div>
+
+</div>
+
     <div class="calendar-grid">
 
-        <div class="day-name">Sun</div>
         <div class="day-name">Mon</div>
         <div class="day-name">Tue</div>
         <div class="day-name">Wed</div>
         <div class="day-name">Thu</div>
         <div class="day-name">Fri</div>
         <div class="day-name">Sat</div>
+        <div class="day-name">Sun</div>
 
-        {% for day in range(1,31) %}
+        {% for week in cal %}
 
-        <div class="calendar-day">
+            {% for day in week %}
 
-            <span>
-                {{ day }}
-            </span>
+            {% if day == 0 %}
 
-            {% if day % 3 == 0 %}
+                <div class="calendar-day empty"></div>
 
-            <div class="activity-dot"></div>
+                {% else %}
 
-            {% endif %}
+                {% set date_key =
+                    year|string + "-" +
+                    "%02d"|format(month) + "-" +
+                    "%02d"|format(day)
+                %}
 
-        </div>
+                <div
+                    class="calendar-day"
+                    data-date="{{ date_key }}"
+                >
+
+                    <span class="day-number">
+
+                        {{ day }}
+
+                    </span>
+
+                    {% if date_key in activity %}
+
+                        <span class="activity-badge">
+
+                            {{ activity[date_key] }}
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+                {% endif %}
+
+            {% endfor %}
 
         {% endfor %}
 
@@ -49,5 +91,70 @@
 
 </div>
 
-{% endblock %}
+<script> 
 
+document
+.querySelectorAll(".calendar-day")
+.forEach(day => {
+
+    day.addEventListener(
+        "click",
+        async function(){
+
+            const date =
+            this.dataset.date;
+
+            if(!date) return;
+
+            const response =
+            await fetch(
+                "/calendar_day/" +
+                date
+            );
+
+            const data =
+            await response.json();
+
+            document.getElementById(
+                "modalDate"
+            ).textContent = date;
+
+            let html = "";
+
+            data.tasks.forEach(task => {
+
+                html += `
+                    <p>
+                        ${
+                            task.completed
+                            ? "✅"
+                            : "❌"
+                        }
+                        ${task.name}
+                    </p>
+                `;
+            });
+
+            document.getElementById(
+                "modalTasks"
+            ).innerHTML = html;
+
+            document.getElementById(
+                "dayModal"
+            ).style.display = "block";
+
+        }
+    );
+
+});
+
+function closeModal(){
+
+    document.getElementById(
+        "dayModal"
+    ).style.display = "none";
+}
+
+</script>
+
+{% endblock %}

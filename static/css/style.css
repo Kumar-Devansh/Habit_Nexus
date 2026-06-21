@@ -6,10 +6,46 @@
 
 body{
     font-family:'Poppins', sans-serif;
-    background:#0f172a;
-    color:white;
+    background:var(--input);
+    color:var(--text);
+}
+:root{
+
+    --bg:#0f172a;
+
+    --card:#111827;
+
+    --card2:#1e293b;
+
+    --text:#ffffff;
+
+    --muted:#94a3b8;
+
+    --input:#0f172a;
+
+    --border:#334155;
+
+    --accent:#2563eb;
 }
 
+body.light-mode{
+
+    --bg:#f8fafc;
+
+    --card:#ffffff;
+
+    --card2:#f1f5f9;
+
+    --text:#111827;
+
+    --muted:#475569;
+
+    --input:#ffffff;
+
+    --border:#d1d5db;
+
+    --accent:#2563eb;
+}
 /* MAIN LAYOUT */
 
 .main-container{
@@ -36,7 +72,7 @@ body{
     width:50%;
     background:linear-gradient(
         135deg,
-        #2563eb,
+        var(--accent),
         #1e3a8a
     );
 
@@ -74,7 +110,7 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    background:#0f172a;
+    background:var(--input);
 }
 
 /* CARD */
@@ -82,7 +118,7 @@ body{
 .auth-card{
     width:420px;
 
-    background:#111827;
+    background:var(--card);
 
     padding:50px;
 
@@ -111,9 +147,9 @@ body{
 
     border-radius:12px;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 
     font-size:16px;
 }
@@ -130,9 +166,9 @@ body{
 
     border-radius:12px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     font-size:16px;
 
@@ -151,7 +187,7 @@ body{
 .auth-link{
     margin-top:25px;
     text-align:center;
-    color:#94a3b8;
+    color:var(--muted);
 }
 
 .auth-link a{
@@ -165,8 +201,8 @@ body{
 
     background:linear-gradient(
         135deg,
-        #1e293b,
-        #0f172a
+        var(--card2),
+        var(--input)
     );
 
     padding:50px;
@@ -215,9 +251,9 @@ body{
 
     border-radius:14px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     font-size:16px;
 
@@ -260,7 +296,7 @@ body{
 
 .stat-card{
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -280,7 +316,7 @@ body{
 }
 
 .stat-card h3{
-    color:#94a3b8;
+    color:var(--muted);
     margin-bottom:20px;
 }
 
@@ -311,7 +347,7 @@ body{
 .task-section,
 .widget-card{
 
-    background:#111827;
+    background:var(--card);
 
     border-radius:24px;
 
@@ -347,9 +383,9 @@ body{
 
     border-radius:14px;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 }
 
 .task-form button{
@@ -360,9 +396,9 @@ body{
 
     border-radius:14px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     cursor:pointer;
 }
@@ -386,7 +422,7 @@ body{
 
     align-items:center;
 
-    background:#1e293b;
+    background:var(--card2);
 
     padding:20px;
 
@@ -454,13 +490,13 @@ body{
 
     text-decoration:none;
 
-    color:white;
+    color:var(--text);
 
     font-size:14px;
 }
 
 .complete-btn{
-    background:#2563eb;
+    background:var(--accent);
 }
 
 .delete-btn{
@@ -507,7 +543,7 @@ body{
 }
 
 .empty{
-    background:#334155;
+    background:var(--border);
 }
 
 /* FRIENDS */
@@ -519,7 +555,7 @@ body{
 
 .friend-box p{
 
-    color:#94a3b8;
+    color:var(--muted);
 
     line-height:1.7;
 }
@@ -532,9 +568,9 @@ body{
 
     padding:14px 22px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     text-decoration:none;
 
@@ -589,13 +625,13 @@ body{
 .light-mode .stat-card,
 .light-mode .task-section,
 .light-mode .widget-card{
-    background:white;
+    background:var(--text);
     color:black;
 }
 .chart-card,
 .calendar-card{
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -612,9 +648,9 @@ body{
 
     border-radius:14px;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 }
 
 /* LEADERBOARD */
@@ -632,7 +668,7 @@ body{
 
 .leader-card{
 
-    background:#111827;
+    background:var(--card);
 
     padding:25px;
 
@@ -663,7 +699,7 @@ body{
 
     height:100vh;
 
-    background:#0f172a;
+    background:var(--input);
 
     padding:30px 20px;
 
@@ -686,7 +722,7 @@ body{
 
     font-size:28px;
 
-    color:white;
+    color:var(--text);
 }
 
 /* MENU */
@@ -717,9 +753,9 @@ body{
 
 .menu a:hover{
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 
     transform:translateX(5px);
 }
@@ -755,7 +791,7 @@ body{
     border-bottom:
     1px solid rgba(255,255,255,0.08);
 
-    background:#0f172a;
+    background:var(--input);
 }
 
 .dark-btn{
@@ -769,9 +805,9 @@ body{
 
     cursor:pointer;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 
     font-size:18px;
 } */
@@ -779,7 +815,7 @@ body{
 
 .profile-card{
 
-    background:#111827;
+    background:var(--card);
 
     padding:50px;
 
@@ -796,7 +832,7 @@ body{
 }
 .settings-card{
 
-    background:#111827;
+    background:var(--card);
 
     padding:40px;
 
@@ -822,9 +858,9 @@ body{
 
     border-radius:14px;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 }
 
 .settings-card button{
@@ -835,9 +871,9 @@ body{
 
     border-radius:14px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     cursor:pointer;
 }
@@ -861,9 +897,9 @@ body{
 
     border-radius:12px;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 
     text-decoration:none;
 }
@@ -871,7 +907,7 @@ body{
 
     margin-top:40px;
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -883,7 +919,7 @@ body{
 
 .calendar-container{
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -916,14 +952,14 @@ body{
 
     font-weight:bold;
 
-    color:#94a3b8;
+    color:var(--muted);
 }
 
 .calendar-day{
 
     min-height:100px;
 
-    background:#1e293b;
+    background:var(--card2);
 
     border-radius:18px;
 
@@ -938,7 +974,7 @@ body{
 
     transform:translateY(-4px);
 
-    background:#334155;
+    background:var(--border);
 }
 
 .calendar-day span{
@@ -1001,7 +1037,7 @@ body{
 
 .profile-banner{
 
-    background:#111827;
+    background:var(--card);
 
     padding:40px;
 
@@ -1035,7 +1071,7 @@ body{
 
 .profile-card{
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -1054,7 +1090,7 @@ body{
 
 .profile-header{
 
-    background:#111827;
+    background:var(--card);
 
     border-radius:24px;
 
@@ -1103,7 +1139,7 @@ body{
 
 .profile-card-section{
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -1130,9 +1166,9 @@ body{
 
     border-radius:14px;
 
-    background:#1e293b;
+    background:var(--card2);
 
-    color:white;
+    color:var(--text);
 
     font-size:15px;
 
@@ -1154,9 +1190,9 @@ body{
 
     border-radius:16px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     font-size:16px;
 
@@ -1177,7 +1213,7 @@ body{
 
     font-size:14px;
 
-    color:#94a3b8;
+    color:var(--muted);
 
     margin-bottom:-10px;
 
@@ -1197,7 +1233,7 @@ body{
 
 .friend-section{
 
-    background:#111827;
+    background:var(--card);
 
     padding:30px;
 
@@ -1214,7 +1250,7 @@ body{
 
     justify-content:space-between;
 
-    background:#1e293b;
+    background:var(--card2);
 
     padding:18px;
 
@@ -1245,14 +1281,14 @@ body{
 
     text-decoration:none;
 
-    color:white;
+    color:var(--text);
 
     font-weight:bold;
 }
 
 .add-btn{
 
-    background:#2563eb;
+    background:var(--accent);
 }
 
 .accept-btn{
@@ -1261,7 +1297,7 @@ body{
 }
 /* .remove-btn{
     background:#ef4444;
-    color:white;
+    color:var(--text);
     text-decoration:none;
     padding:10px 18px;
     border-radius:10px;
@@ -1278,7 +1314,7 @@ body{
     padding:12px 20px;
     border-radius:12px;
     text-decoration:none;
-    color:white;
+    color:var(--text);
     background:#ef4444;
     transition:.3s;
 }
@@ -1292,9 +1328,9 @@ body{
     background:
         linear-gradient(
             135deg,
-            #0f172a,
-            #1e293b,
-            #0f172a
+            var(--input),
+            var(--card2),
+            var(--input)
         );
 }
 
@@ -1341,7 +1377,7 @@ body{
 }
 
 .profile-bio{
-    color:#94a3b8;
+    color:var(--muted);
     margin-top:10px;
 }
 
@@ -1392,11 +1428,11 @@ body{
 
 .social-links a{
     text-decoration:none;
-    color:white;
+    color:var(--text);
     padding:12px 20px;
     border-radius:12px;
 
-    background:#2563eb;
+    background:var(--accent);
 
     transition:.3s;
 }
@@ -1432,7 +1468,7 @@ body{
 .progress-bar{
     width:100%;
     height:12px;
-    background:#1e293b;
+    background:var(--card2);
     border-radius:20px;
     overflow:hidden;
 }
@@ -1455,7 +1491,7 @@ body{
 
     padding:14px 24px;
 
-    background:#111827;
+    background:var(--card);
 
     border-bottom:1px solid #1f2937;
 
@@ -1491,7 +1527,7 @@ body{
     font-size:18px;
 
     background:#1f2937;
-    color:white;
+    color:var(--text);
 
     transition:.3s;
 }
@@ -1545,7 +1581,7 @@ body{
     align-items:center;
     flex-wrap:wrap;
 
-    background:#111827;
+    background:var(--card);
     border-top:1px solid #1f2937;
 }
 

@@ -122,9 +122,14 @@ def init_db():
 
         user_id INTEGER,
 
-        leetcode_username TEXT
+        leetcode_username TEXT,
+
+        cached_data TEXT,
+
+        last_sync TEXT
     )
     """)
+
 
     # DSA TOPICS
 

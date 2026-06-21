@@ -3,13 +3,22 @@ from flask import (
     render_template,
     request,
     redirect,
-    session
+    session,
+    Response
 )
 import requests
 import csv
+import calendar as cal
 from io import StringIO
+import json
+from flask import Response
+import io
+from datetime import (
+date,
+timedelta,
+datetime
+)
 
-from datetime import date, timedelta
 from database import (
     get_db_connection,
     init_db
@@ -102,6 +111,18 @@ def dashboard():
     """,
     (session["user_id"],)
 ).fetchall()
+
+    conn = get_db_connection()
+
+    row = conn.execute(
+        """
+        SELECT *
+        FROM routines
+        LIMIT 1
+        """
+    ).fetchone()
+
+    print(dict(row))
 
 
     conn.close()
@@ -253,8 +274,9 @@ def register():
 def analytics():
 
     if "user_id" not in session:
-
         return redirect("/login")
+
+    user_id = session["user_id"]
 
     conn = get_db_connection()
 
@@ -264,7 +286,7 @@ def analytics():
         FROM routines
         WHERE user_id=?
         """,
-        (session["user_id"],)
+        (user_id,)
     ).fetchall()
 
     total = len(routines)
@@ -276,66 +298,192 @@ def analytics():
 
     progress = 0
 
-    if total > 0:
-
+    if total:
         progress = round(
             (completed / total) * 100
         )
 
-    streak = calculate_streak(
-        session["user_id"]
+    streak = calculate_streak(user_id)
+
+    # Last 14 days activity
+
+    logs = conn.execute(
+        """
+        SELECT
+            log_date,
+            SUM(completed) as completed_count
+        FROM task_logs
+        WHERE routine_id IN (
+            SELECT id
+            FROM routines
+            WHERE user_id=?
+        )
+        GROUP BY log_date
+        ORDER BY log_date DESC
+        LIMIT 14
+        """,
+        (user_id,)
+    ).fetchall()
+
+    logs = list(reversed(logs))
+
+    labels = [
+        row["log_date"][5:]
+        for row in logs
+    ]
+
+    completion_data = [
+        int(row["completed_count"] or 0)
+        for row in logs
+    ]
+
+    labels = [
+        row["log_date"][5:]
+        for row in logs
+    ]
+
+    completion_data = [
+        int(row["completed_count"] or 0)
+        for row in logs
+    ]
+
+    # Best habit
+
+    best_habit = conn.execute(
+        """
+        SELECT
+            r.task_name,
+            SUM(t.completed) as score
+        FROM task_logs t
+        JOIN routines r
+            ON r.id = t.routine_id
+        WHERE r.user_id=?
+        GROUP BY r.id
+        ORDER BY score DESC
+        LIMIT 1
+        """,
+        (user_id,)
+    ).fetchone()
+
+    best_habit_name = (
+        best_habit["task_name"]
+        if best_habit
+        else "No Data"
     )
 
     conn.close()
 
     return render_template(
         "dashboard/analytics.html",
-
         total=total,
-
         completed=completed,
-
         progress=progress,
-
-        streak=streak
+        streak=streak,
+        labels=labels,
+        completion_data=completion_data,
+        best_habit=best_habit_name
     )
-
-
 
 
 @app.route("/calendar")
 def calendar():
 
     if "user_id" not in session:
-
         return redirect("/login")
+
+    user_id = session["user_id"]
 
     conn = get_db_connection()
 
     logs = conn.execute(
         """
-        SELECT *
-
+        SELECT
+            tl.log_date,
+            SUM(tl.completed) AS completed_count
         FROM task_logs tl
-
         JOIN routines r
-        ON tl.routine_id = r.id
-
-        WHERE r.user_id=?
-
-        ORDER BY log_date DESC
+            ON tl.routine_id = r.id
+        WHERE r.user_id = ?
+        GROUP BY tl.log_date
         """,
-        (session["user_id"],)
+        (user_id,)
     ).fetchall()
 
     conn.close()
 
-    return render_template(
-        "dashboard/calendar.html",
-        logs=logs
+    activity = {}
+
+    for row in logs:
+
+        activity[
+            row["log_date"]
+        ] = row["completed_count"]
+
+    today = datetime.now()
+
+    year = today.year
+
+    month = today.month
+
+    month_grid = cal.monthcalendar(
+        year,
+        month
     )
 
+    month_name = cal.month_name[
+        month
+    ]
 
+    return render_template(
+        "dashboard/calendar.html",
+
+        cal=month_grid,
+
+        activity=activity,
+
+        month_name=month_name,
+
+        year=year,
+
+        month=month
+    )
+
+@app.route("/calendar_day/<date>")
+def calendar_day(date):
+
+    if "user_id" not in session:
+        return {}
+
+    conn = get_db_connection()
+
+    tasks = conn.execute(
+        """
+        SELECT
+            r.task_name,
+            tl.completed
+        FROM task_logs tl
+        JOIN routines r
+            ON tl.routine_id = r.id
+        WHERE r.user_id = ?
+        AND tl.log_date = ?
+        """,
+        (
+            session["user_id"],
+            date
+        )
+    ).fetchall()
+
+    conn.close()
+
+    return {
+        "tasks": [
+            {
+                "name": row["task_name"],
+                "completed": row["completed"]
+            }
+            for row in tasks
+        ]
+    }
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -1048,91 +1196,95 @@ def calculate_streak(user_id):
 
     return streak
 
+# =========================
+# FRIENDS HUB
+# =========================
+
 @app.route("/friends-hub")
-def friends():
+def friends_hub():
 
     if "user_id" not in session:
+
         return redirect("/login")
 
     conn = get_db_connection()
 
-    users = conn.execute(
-    """
-    SELECT *
-    FROM users
-    WHERE id != ?
-    AND id NOT IN (
-        SELECT receiver_id
+    current_user = session["user_id"]
+
+    # =========================
+    # FRIENDS LIST
+    # =========================
+
+    friends = []
+
+    try:
+
+        friends = conn.execute("""
+
+            SELECT users.*
+
+            FROM friends
+
+            JOIN users
+            ON users.id = friends.friend2_id
+
+            WHERE friends.friend1_id = ?
+
+        """, (current_user,)).fetchall()
+
+    except:
+
+        friends = []
+
+
+    # =========================
+    # DISCOVER USERS
+    # =========================
+
+    users = conn.execute("""
+
+        SELECT *
+
+        FROM users
+
+        WHERE id != ?
+
+    """, (current_user,)).fetchall()
+
+    # =========================
+    # PENDING REQUESTS
+    # =========================
+
+    requests = conn.execute("""
+
+        SELECT friend_requests.id,
+               users.username,
+               users.profile_image,
+               users.college
+
         FROM friend_requests
-        WHERE sender_id = ?
 
-        UNION
-
-        SELECT sender_id
-        FROM friend_requests
-        WHERE receiver_id = ?
-
-        UNION
-
-        SELECT user1_id
-        FROM friends
-
-        UNION
-
-        SELECT user2_id
-        FROM friends
-    )
-    """,
-    (
-        session["user_id"],
-        session["user_id"],
-        session["user_id"]
-    )
-).fetchall()
-
-    requests = conn.execute(
-        """
-        SELECT
-            friend_requests.id,
-            users.username,
-            users.profile_image
-        FROM friend_requests
         JOIN users
-        ON friend_requests.sender_id = users.id
-        WHERE friend_requests.receiver_id=?
-        AND friend_requests.status='pending'
-        """,
-        (session["user_id"],)
-    ).fetchall()
 
-    friends = conn.execute(
-        """
-        SELECT users.*
-        FROM friends
-        JOIN users
-        ON users.id =
-        CASE
-            WHEN friends.user1_id = ?
-            THEN friends.user2_id
-            ELSE friends.user1_id
-        END
-        WHERE friends.user1_id = ?
-        OR friends.user2_id = ?
-        """,
-        (
-            session["user_id"],
-            session["user_id"],
-            session["user_id"]
-        )
-    ).fetchall()
+        ON users.id = friend_requests.sender_id
+
+        WHERE friend_requests.receiver_id = ?
+
+        AND friend_requests.status = 'pending'
+
+    """, (current_user,)).fetchall()
 
     conn.close()
 
     return render_template(
+
         "friends/friends_hub.html",
+
+        friends=friends,
+
         users=users,
-        requests=requests,
-        friends=friends
+
+        requests=requests
     )
 
 @app.route("/friend-profile/<int:user_id>")
@@ -1241,9 +1393,19 @@ def fetch_leetcode_data(username):
 
 @app.route("/dsa_tracker")
 def dsa_tracker():
-        # =========================
-    # DEFAULT SAFE VALUES
-    # =========================
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+
+    # -------------------------
+    # DEFAULT VALUES
+    # -------------------------
+
+    leetcode_data = None
 
     topic_analytics = []
 
@@ -1252,52 +1414,35 @@ def dsa_tracker():
     readiness_score = 0
 
     easy_count = 0
-
     medium_count = 0
-
     hard_count = 0
-
     total_solved = 0
 
     streak = 0
 
-    weekly_counts = [0, 0, 0, 0, 0, 0, 0]
+    weekly_labels = []
+    weekly_counts = []
 
-    weekly_labels = [
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-        "Sun"
-    ]
-
-
-    if "user_id" not in session:
-
-        return redirect("/login")
-
-    user_id = session["user_id"]
-
-    conn = get_db_connection()
-
-    # LEETCODE USERNAME
+    # -------------------------
+    # FETCH PROFILE
+    # -------------------------
 
     profile = conn.execute(
         """
         SELECT *
         FROM dsa_profiles
-        WHERE user_id = ?
+        WHERE user_id=?
         """,
         (user_id,)
     ).fetchone()
 
+    # -------------------------
+    # FETCH LEETCODE DATA
+    # -------------------------
 
-    if profile:
+    if profile and profile["leetcode_username"]:
 
         username = profile["leetcode_username"]
-
         query = """
         query userPublicProfile($username: String!) {
 
@@ -1342,178 +1487,194 @@ def dsa_tracker():
         }
         """
 
-
-        variables = {
-            "username": username
-        }
-
+        
         try:
+
             response = requests.post(
                 "https://leetcode.com/graphql",
                 json={
                     "query": query,
-                    "variables": variables
+                    "variables": {
+                        "username": username
+                    }
                 },
-                timeout=10
+                timeout=15
             )
+
+            print("STATUS:", response.status_code)
 
             if response.status_code == 200:
                 leetcode_data = response.json()
-            else:
-                leetcode_data = None
 
-        except requests.RequestException:
+        except Exception as e:
+
+            print("LEETCODE ERROR:", e)
+
             leetcode_data = None
 
-        
-            if (
-                leetcode_data.get("data")
-                and leetcode_data["data"].get("matchedUser")
-            ):
 
-                user_data = leetcode_data["data"]["matchedUser"]
+    # -------------------------
+    # PROCESS DATA
+    # -------------------------
 
-                stats = user_data["submitStats"]["acSubmissionNum"]
+    if (
+        leetcode_data
+        and leetcode_data.get("data")
+        and leetcode_data["data"].get("matchedUser")
+    ):
 
-                total_solved = stats[0]["count"]
+        user_data = (
+            leetcode_data["data"]["matchedUser"]
+        )
 
-                today = date.today().isoformat()
+        # ---------------------
+        # DIFFICULTY STATS
+        # ---------------------
 
-                existing = conn.execute(
-                    """
-                    SELECT id
-                    FROM dsa_history
-                    WHERE user_id = ?
-                    AND log_date = ?
-                    """,
-                    (
-                        user_id,
-                        today
-                    )
-                ).fetchone()
+        stats = user_data["submitStats"]["acSubmissionNum"]
 
-                if existing:
+        difficulty_map = {
+            item["difficulty"]: item["count"]
+            for item in stats
+        }
 
-                    conn.execute(
-                        """
-                        UPDATE dsa_history
-                        SET solved_count = ?
-                        WHERE id = ?
-                        """,
-                        (
-                            total_solved,
-                            existing["id"]
-                        )
-                    )
+        easy_count = difficulty_map.get("Easy", 0)
 
-                else:
+        medium_count = difficulty_map.get("Medium", 0)
 
-                    conn.execute(
-                        """
-                        INSERT INTO dsa_history(
-                            user_id,
-                            solved_count,
-                            log_date
-                        )
-                        VALUES(?,?,?)
-                        """,
-                        (
-                            user_id,
-                            total_solved,
-                            today
-                        )
-                    )
-                
-                topic_analytics = []
+        hard_count = difficulty_map.get("Hard", 0)
 
-                weak_topics = []
+        total_solved = (
+            easy_count
+            + medium_count
+            + hard_count
+        )
 
-                readiness_score = 0
+        # ---------------------
+        # SAVE DAILY HISTORY
+        # ---------------------
 
-                if leetcode_data \
-                and leetcode_data.get("data") \
-                and leetcode_data["data"].get("matchedUser"):
+        today = date.today().isoformat()
 
-                    tag_data = (
-                        leetcode_data["data"]
-                        ["matchedUser"]
-                        .get("tagProblemCounts")
-                    )
+        existing = conn.execute(
+            """
+            SELECT *
+            FROM dsa_history
+            WHERE user_id=?
+            AND log_date=?
+            """,
+            (
+                user_id,
+                today
+            )
+        ).fetchone()
 
-                    if not tag_data:
-                        tag_data = {
-                            "advanced": [],
-                            "intermediate": [],
-                            "fundamental": []
-                        }
+        if existing:
 
-                    all_topics = (
-                        tag_data["advanced"] +
-                        tag_data["intermediate"] +
-                        tag_data["fundamental"]
-                    )
+            conn.execute(
+                """
+                UPDATE dsa_history
+                SET solved_count=?
+                WHERE id=?
+                """,
+                (
+                    total_solved,
+                    existing["id"]
+                )
+            )
 
-                    # SORT TOPICS
+        else:
 
-                    all_topics = sorted(
+            conn.execute(
+                """
+                INSERT INTO dsa_history(
+                    user_id,
+                    solved_count,
+                    log_date
+                )
+                VALUES(?,?,?)
+                """,
+                (
+                    user_id,
+                    total_solved,
+                    today
+                )
+            )
 
-                        all_topics,
+        # ---------------------
+        # TOPIC ANALYTICS
+        # ---------------------
 
-                        key=lambda x: x["problemsSolved"],
+        tag_data = user_data.get(
+            "tagProblemCounts",
+            {}
+        )
 
-                        reverse=True
-                    )
+        advanced = tag_data.get(
+            "advanced",
+            []
+        )
 
-                    topic_analytics = all_topics[:8]
+        intermediate = tag_data.get(
+            "intermediate",
+            []
+        )
 
-                    # WEAK TOPICS
+        fundamental = tag_data.get(
+            "fundamental",
+            []
+        )
 
-                    weak_topics = [
+        all_topics = (
+            advanced
+            + intermediate
+            + fundamental
+        )
 
-                        topic for topic in all_topics
+        all_topics = sorted(
+            all_topics,
+            key=lambda x: x["problemsSolved"],
+            reverse=True
+        )
 
-                        if topic["problemsSolved"] < 5
-                    ][:5]
+        topic_analytics = all_topics[:8]
 
-                    # READINESS SCORE
+        weak_topics = [
+            topic
+            for topic in all_topics
+            if topic["problemsSolved"] < 5
+        ][:5]
 
-                    total = sum([
-                        x["problemsSolved"]
-                        for x in all_topics
-                    ])
+        total_topic_solves = sum(
+            topic["problemsSolved"]
+            for topic in all_topics
+        )
 
-                    readiness_score = min(
+        readiness_score = min(
+            int(total_topic_solves / 4),
+            100
+        )
 
-                        int(total / 4),
+        conn.commit()
 
-                        100
-                    )
-
-
-                
-
-                conn.commit()
-
-            
-
-    # TOPICS
+    # -------------------------
+    # LOCAL DATABASE DATA
+    # -------------------------
 
     topics = conn.execute(
         """
         SELECT *
         FROM dsa_topics
-        WHERE user_id = ?
+        WHERE user_id=?
         """,
         (user_id,)
     ).fetchall()
-
-    # PENDING
 
     pending_topics = conn.execute(
         """
         SELECT *
         FROM pending_topics
-        WHERE user_id = ?
+        WHERE user_id=?
         """,
         (user_id,)
     ).fetchall()
@@ -1522,29 +1683,22 @@ def dsa_tracker():
         """
         SELECT *
         FROM dsa_history
-        WHERE user_id = ?
+        WHERE user_id=?
         ORDER BY log_date
         """,
         (user_id,)
     ).fetchall()
 
-    
-
-    # =========================
-    # WEEKLY ANALYTICS
-    # =========================
-
-    weekly_data = conn.execute("""
-
-    SELECT
-        solved_count,
-        log_date
-    FROM dsa_history
-    WHERE user_id=?
-    ORDER BY log_date DESC
-    LIMIT 7
-
-    """,(session["user_id"],)).fetchall()
+    weekly_data = conn.execute(
+        """
+        SELECT solved_count,log_date
+        FROM dsa_history
+        WHERE user_id=?
+        ORDER BY log_date DESC
+        LIMIT 7
+        """,
+        (user_id,)
+    ).fetchall()
 
     weekly_data = weekly_data[::-1]
 
@@ -1558,49 +1712,20 @@ def dsa_tracker():
         for row in weekly_data
     ]
 
-    # =========================
-    # TOTAL PROBLEMS
-    # =========================
-
-    easy_count = 0
-    medium_count = 0
-    hard_count = 0
-
-    if leetcode_data \
-    and leetcode_data.get("data") \
-    and leetcode_data["data"].get("matchedUser"):
-
-        stats = (
-            leetcode_data["data"]
-            ["matchedUser"]
-            ["submitStats"]
-            ["acSubmissionNum"]
-        )
-
-        difficulty_map = {
-            item["difficulty"]: item["count"]
-            for item in stats
-        }
-
-        easy_count = difficulty_map.get("Easy", 0)
-        medium_count = difficulty_map.get("Medium", 0)
-        hard_count = difficulty_map.get("Hard", 0)
-    total_solved = (
-        easy_count +
-        medium_count +
-        hard_count
+    streak = len(
+        [
+            x
+            for x in weekly_counts
+            if x > 0
+        ]
     )
 
-    # =========================
-    # STREAK CALCULATION
-    # =========================
+    print("easy_count =", easy_count)
+    print("medium_count =", medium_count)
+    print("hard_count =", hard_count)
 
-    streak = len([
-        x for x in weekly_counts
-        if x > 0
-    ])
-
-    
+    print("weekly_labels =", weekly_labels)
+    print("weekly_counts =", weekly_counts)
 
     conn.close()
 
@@ -1619,12 +1744,11 @@ def dsa_tracker():
         total_solved=total_solved,
         streak=streak,
         topic_analytics=topic_analytics,
-
         weak_topics=weak_topics,
-
-        readiness_score=readiness_score,
-
+        readiness_score=readiness_score
     )
+
+
 
 @app.route(
     "/add_dsa_topic",
@@ -1709,17 +1833,72 @@ def add_pending_topic():
 @app.route(
     "/save_leetcode",
     methods=["POST"]
-)
+    )
 def save_leetcode():
 
-    if "user_id" not in session:
 
+    if "user_id" not in session:
         return redirect("/login")
 
     user_id = session["user_id"]
 
-    username = request.form["leetcode_username"]
+    username = request.form[
+        "leetcode_username"
+    ].strip()
 
+    # Convert profile URL -> username
+    if "leetcode.com" in username:
+        username = (
+            username
+            .rstrip("/")
+            .split("/")[-1]
+        )
+
+    # -------------------------
+    # VALIDATE USERNAME
+    # -------------------------
+
+    validation_query = """
+    query($username:String!){
+        matchedUser(username:$username){
+            username
+        }
+    }
+    """
+
+    try:
+
+        response = requests.post(
+            "https://leetcode.com/graphql",
+            json={
+                "query": validation_query,
+                "variables": {
+                    "username": username
+                }
+            },
+            timeout=10
+        )
+
+        data = response.json()
+
+        if (
+            not data.get("data")
+            or not data["data"].get("matchedUser")
+        ):
+            return "Invalid LeetCode Username"
+
+    except Exception as e:
+
+        print(
+            "LEETCODE VALIDATION ERROR:",
+            e
+        )
+
+        return "Unable to verify LeetCode username"
+
+    # -------------------------
+    # SAVE USERNAME
+    # -------------------------
 
     conn = get_db_connection()
 
@@ -1727,7 +1906,7 @@ def save_leetcode():
         """
         SELECT *
         FROM dsa_profiles
-        WHERE user_id = ?
+        WHERE user_id=?
         """,
         (user_id,)
     ).fetchone()
@@ -1737,8 +1916,8 @@ def save_leetcode():
         conn.execute(
             """
             UPDATE dsa_profiles
-            SET leetcode_username = ?
-            WHERE user_id = ?
+            SET leetcode_username=?
+            WHERE user_id=?
             """,
             (
                 username,
@@ -1763,59 +1942,163 @@ def save_leetcode():
         )
 
     conn.commit()
-
     conn.close()
 
-    return redirect("/dsa_tracker")
+    print(
+        "VALID LEETCODE USER:",
+        username
+    )
 
-@app.route("/export_dsa_csv")
-def export_dsa_csv():
+    return redirect("/dsa_tracker")
+    
+@app.route("/export_habits")
+def export_habits():
 
     if "user_id" not in session:
-
         return redirect("/login")
 
     user_id = session["user_id"]
 
     conn = get_db_connection()
 
-    topics = conn.execute(
+    routines = conn.execute(
         """
-        SELECT *
-        FROM dsa_topics
-        WHERE user_id = ?
+        SELECT id, task_name
+        FROM routines
+        WHERE user_id=?
+        ORDER BY id
         """,
         (user_id,)
     ).fetchall()
 
-    conn.close()
+    logs = conn.execute(
+        """
+        SELECT
+            t.log_date,
+            t.completed,
+            r.task_name
+        FROM task_logs t
+        JOIN routines r
+            ON t.routine_id = r.id
+        WHERE r.user_id=?
+        ORDER BY t.log_date
+        """,
+        (user_id,)
+    ).fetchall()
 
-    output = StringIO()
-
+    output = io.StringIO()
     writer = csv.writer(output)
 
-    writer.writerow([
-        "Topic",
-        "Completed",
-        "Target"
-    ])
+    task_names = [
+        routine["task_name"]
+        for routine in routines
+    ]
 
-    for topic in topics:
+    dates = sorted(
+        {
+            log["log_date"]
+            for log in logs
+        }
+    )
 
-        writer.writerow([
-            topic["topic_name"],
-            topic["completed"],
-            topic["target"]
-        ])
+    habit_data = {}
+
+    for date in dates:
+
+        habit_data[date] = {
+            task: "Incomplete"
+            for task in task_names
+        }
+
+    for log in logs:
+
+        habit_data[
+            log["log_date"]
+        ][
+            log["task_name"]
+        ] = (
+            "Completed"
+            if log["completed"]
+            else "Incomplete"
+        )
+
+    writer.writerow(
+        ["Date"] + task_names
+    )
+
+    for date in dates:
+
+        row = [date]
+
+        for task in task_names:
+
+            row.append(
+                habit_data[date][task]
+            )
+
+        writer.writerow(row)
+
+    conn.close()
 
     output.seek(0)
 
     return Response(
-        output,
+        output.getvalue(),
         mimetype="text/csv",
         headers={
             "Content-Disposition":
-            "attachment;filename=dsa_progress.csv"
+            "attachment; filename=habit_history.csv"
+        }
+    )
+
+@app.route("/export_dsa")
+def export_dsa():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+
+    history = conn.execute(
+        """
+        SELECT
+            log_date,
+            solved_count
+        FROM dsa_history
+        WHERE user_id=?
+        ORDER BY log_date
+        """,
+        (user_id,)
+    ).fetchall()
+
+    output = io.StringIO()
+
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "Date",
+        "Solved Problems"
+    ])
+
+    for row in history:
+
+        writer.writerow([
+            row["log_date"],
+            row["solved_count"]
+        ])
+
+    conn.close()
+
+    output.seek(0)
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+            "attachment; filename=dsa_progress.csv"
         }
     )
 

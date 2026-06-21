@@ -31,7 +31,14 @@
         ) }}"
     >
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/calendar.css') }}"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1/dist/apexcharts.min.js"></script>
+    {% block extra_css %}
+    {% endblock %}
 
 </head>
 

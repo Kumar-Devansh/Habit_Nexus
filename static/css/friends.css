@@ -1,0 +1,463 @@
+
+/* =========================
+   GLOBAL
+========================= */
+
+.friends-hero {
+
+    position: relative;
+
+    padding: 120px 8%;
+
+    border-radius: 30px;
+
+    overflow: hidden;
+
+    margin-bottom: 50px;
+
+    background:
+    linear-gradient(
+        135deg,
+        #6c63ff,
+        #4b44d4,
+        #1c1f4a
+    );
+
+    color: white;
+}
+
+.hero-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+    radial-gradient(
+        circle at top right,
+        rgba(255,255,255,0.2),
+        transparent 40%
+    );
+}
+
+.hero-content {
+
+    position: relative;
+
+    z-index: 2;
+}
+
+.hero-badge {
+
+    display: inline-block;
+
+    padding: 10px 18px;
+
+    border-radius: 50px;
+
+    background: rgba(255,255,255,0.15);
+
+    margin-bottom: 20px;
+
+    font-size: 14px;
+
+    backdrop-filter: blur(10px);
+}
+
+.hero-content h1 {
+
+    font-size: 58px;
+
+    margin-bottom: 20px;
+
+    font-weight: 800;
+}
+
+.hero-content p {
+
+    max-width: 650px;
+
+    line-height: 1.8;
+
+    font-size: 18px;
+
+    opacity: 0.9;
+}
+
+/* =========================
+   HERO STATS
+========================= */
+
+.hero-stats {
+
+    display: flex;
+
+    gap: 25px;
+
+    margin-top: 40px;
+
+    flex-wrap: wrap;
+}
+
+.hero-stat {
+
+    background: rgba(255,255,255,0.12);
+
+    padding: 20px 30px;
+
+    border-radius: 20px;
+
+    backdrop-filter: blur(12px);
+
+    min-width: 140px;
+}
+
+.hero-stat h2 {
+
+    font-size: 34px;
+
+    margin-bottom: 5px;
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.search-section {
+
+    margin-bottom: 40px;
+}
+
+.search-box input {
+
+    width: 100%;
+
+    padding: 18px 24px;
+
+    border-radius: 18px;
+
+    border: none;
+
+    background: #151924;
+
+    color: white;
+
+    font-size: 16px;
+}
+
+/* =========================
+   SECTIONS
+========================= */
+
+.friend-wrapper {
+
+    margin-bottom: 60px;
+}
+
+.section-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 25px;
+
+    flex-wrap: wrap;
+}
+
+.section-header h2 {
+
+    font-size: 32px;
+}
+
+/* =========================
+   GRID
+========================= */
+
+.friend-grid {
+
+    display: grid;
+
+    grid-template-columns:
+    repeat(auto-fit, minmax(300px, 1fr));
+
+    gap: 25px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.modern-card {
+
+    position: relative;
+
+    background: #121826;
+
+    border-radius: 24px;
+
+    padding: 25px;
+
+    overflow: hidden;
+
+    transition: 0.35s ease;
+
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.modern-card:hover {
+
+    transform: translateY(-8px);
+
+    box-shadow:
+    0 20px 50px rgba(0,0,0,0.3);
+}
+
+.card-top {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+    margin-bottom: 25px;
+}
+
+.modern-avatar {
+
+    width: 70px;
+
+    height: 70px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    border: 3px solid #6c63ff;
+}
+
+.card-top h3 {
+
+    margin-bottom: 5px;
+
+    color: white;
+}
+
+.card-top p {
+
+    color: #a5b0d6;
+
+    font-size: 14px;
+}
+
+/* =========================
+   ONLINE DOT
+========================= */
+
+.online-dot {
+
+    position: absolute;
+
+    top: 18px;
+
+    right: 18px;
+
+    width: 12px;
+
+    height: 12px;
+
+    border-radius: 50%;
+
+    background: #00ff88;
+
+    box-shadow:
+    0 0 10px #00ff88;
+}
+
+/* =========================
+   PROGRESS
+========================= */
+
+.friend-progress {
+
+    margin-bottom: 25px;
+}
+
+.progress-label {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+
+    color: #cfd6ff;
+
+    font-size: 14px;
+}
+
+.progress-bar {
+
+    width: 100%;
+
+    height: 10px;
+
+    background: rgba(255,255,255,0.08);
+
+    border-radius: 50px;
+
+    overflow: hidden;
+}
+
+.progress-fill {
+
+    width: 78%;
+
+    height: 100%;
+
+    background:
+    linear-gradient(
+        90deg,
+        #6c63ff,
+        #8f87ff
+    );
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.card-actions {
+
+    display: flex;
+
+    gap: 12px;
+
+    flex-wrap: wrap;
+}
+
+.card-actions a {
+
+    text-decoration: none;
+
+    padding: 12px 18px;
+
+    border-radius: 12px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    transition: 0.3s;
+}
+
+.add-btn,
+.accept-btn {
+
+    background:
+    linear-gradient(
+        135deg,
+        #6c63ff,
+        #4b44d4
+    );
+
+    color: white;
+}
+
+.view-btn {
+
+    background: #20283a;
+
+    color: white;
+}
+
+.remove-btn {
+
+    background: #ff4d67;
+
+    color: white;
+}
+
+.card-actions a:hover {
+
+    transform: scale(1.05);
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.empty-state {
+
+    padding: 40px;
+
+    text-align: center;
+
+    background: #121826;
+
+    border-radius: 24px;
+}
+
+/* =========================
+   FLOATING BUTTON
+========================= */
+
+.floating-social-btn {
+
+    position: fixed;
+
+    bottom: 30px;
+
+    right: 30px;
+
+    width: 65px;
+
+    height: 65px;
+
+    border-radius: 50%;
+
+    border: none;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+    color: white;
+
+    background:
+    linear-gradient(
+        135deg,
+        #6c63ff,
+        #4b44d4
+    );
+
+    box-shadow:
+    0 15px 40px rgba(108,99,255,0.4);
+
+    z-index: 999;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:768px){
+
+    .hero-content h1 {
+
+        font-size: 42px;
+    }
+
+    .hero-stats {
+
+        flex-direction: column;
+    }
+
+    .section-header {
+
+        gap: 15px;
+    }
+}

@@ -1,0 +1,83 @@
+.analytics-page{
+
+    max-width:1200px;
+
+    margin:auto;
+}
+
+.stats-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:20px;
+
+    margin:25px 0;
+}
+
+.stat-card{
+
+    padding:25px;
+
+    border-radius:16px;
+
+    background:#111827;
+
+    text-align:center;
+}
+
+.insight-card{
+
+    margin:25px 0;
+
+    padding:25px;
+
+    border-radius:16px;
+
+    background:#111827;
+}
+
+/* .chart-card{
+
+    margin-top:25px;
+
+    padding:25px;
+
+    border-radius:16px;
+
+    background:#111827;
+
+    height:450px;
+} */
+.charts-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(450px,1fr));
+
+    gap:25px;
+
+    margin-top:30px;
+}
+
+.chart-card{
+
+    background:#111827;
+
+    padding:25px;
+
+    border-radius:18px;
+
+    min-height:450px;
+}
+#progressRadial{
+
+    min-height:280px;
+}
+#activityBar{
+
+    min-height: 350px;
+}

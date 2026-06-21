@@ -2,94 +2,241 @@
 
 {% block content %}
 
-<h1>
-    Analytics 📊
-</h1>
+<div class="analytics-page">
 
-<div class="stats-grid">
+    <h1>
+        Analytics Dashboard 📊
+    </h1>
 
-    <div class="stat-card">
+    <div class="stats-grid">
 
-        <h3>Total Tasks</h3>
+        <div class="stat-card">
+            <h3>Total Tasks</h3>
+            <h1>{{ total }}</h1>
+        </div>
 
-        <h1>
-            {{ total }}
-        </h1>
+        <div class="stat-card">
+            <h3>Completed</h3>
+            <h1>{{ completed }}</h1>
+        </div>
 
-    </div>
+        <div class="stat-card">
+            <h3>Progress</h3>
+            <h1>{{ progress }}%</h1>
+        </div>
 
-    <div class="stat-card">
-
-        <h3>Completed</h3>
-
-        <h1>
-            {{ completed }}
-        </h1>
-
-    </div>
-
-    <div class="stat-card">
-
-        <h3>Progress</h3>
-
-        <h1>
-            {{ progress }}%
-        </h1>
+        <div class="stat-card">
+            <h3>Current Streak</h3>
+            <h1>{{ streak }}</h1>
+        </div>
 
     </div>
 
-    <div class="stat-card">
+    <div class="insight-card">
 
-        <h3>Streak</h3>
+        <h2>
+            🏆 Best Habit
+        </h2>
 
-        <h1>
-            {{ streak }}
-        </h1>
+        <p>
+            {{ best_habit }}
+        </p>
+
+    </div>
+
+    <div class="charts-grid">
+
+    <!-- RADIAL CHART -->
+
+    <div class="chart-card">
+
+        <h2>
+            Overall Progress
+        </h2>
+
+        <div id="progressRadial"></div>
+
+    </div>
+
+    <!-- AREA CHART -->
+
+    <div class="chart-card">
+
+        <h2>
+            Activity Trend
+        </h2>
+
+        <div id="activityBar"></div>
 
     </div>
 
 </div>
-
-<!-- CHART -->
-
-<div class="chart-box">
-
-    <canvas id="progressChart"></canvas>
 
 </div>
 
 <script>
 
-const ctx = document.getElementById(
-    'progressChart'
-);
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
 
-new Chart(ctx, {
+        // RADIAL PROGRESS
 
-    type: 'doughnut',
+        var radialOptions = {
 
-    data: {
+            series: [{{ progress|default(0) }}],
 
-        labels: [
-            'Completed',
-            'Remaining'
-        ],
+            chart: {
 
-        datasets: [{
+                type: "radialBar",
 
-            data: [
-                {{ completed }},
-                {{ total - completed }}
+                height: 280
+            },
+
+            plotOptions: {
+
+                radialBar: {
+
+                    hollow: {
+
+                        size: "70%"
+                    },
+
+                    track: {
+
+                        strokeWidth: "100%"
+                    },
+
+                    dataLabels: {
+
+                        name: {
+
+                            show: true,
+
+                            fontSize: "18px"
+                        },
+
+                        value: {
+
+                            show: true,
+
+                            fontSize: "32px"
+                        }
+                    }
+                }
+            },
+
+            labels: [
+                "Progress"
             ],
 
-            borderWidth: 2
+            tooltip: {
 
-        }]
+                theme: "dark"
+            }
+
+        };
+
+        var radialChart = new ApexCharts(
+
+            document.querySelector(
+                "#progressRadial"
+            ),
+
+            radialOptions
+
+        );
+
+        radialChart.render();
+
+        // ACTIVITY BAR CHART
+                
+        var barOptions = {
+
+            series: [{
+
+                name: "Completed Tasks",
+
+                data: {{ completion_data|tojson }}
+            }],
+
+            chart: {
+
+                type: "bar",
+
+                height: 350,
+
+                toolbar: {
+
+                    show: false
+                }
+            },
+
+            plotOptions: {
+
+                bar: {
+
+                    borderRadius: 6,
+
+                    columnWidth: "45%"
+                }
+            },
+
+            dataLabels: {
+
+                enabled: true
+            },
+
+            xaxis: {
+
+                categories:
+                {{ labels|tojson }}
+            },
+
+            yaxis: {
+
+                min: 0,
+
+                forceNiceScale: true,
+
+                labels: {
+
+                    formatter: function(value){
+
+                        return Math.round(value);
+                    }
+                }
+            },
+
+            tooltip: {
+
+                theme: "dark",
+
+                y: {
+
+                    formatter: function(value){
+
+                        return value + " Tasks";
+                    }
+                }
+            }
+
+        };
+
+        var barChart = new ApexCharts(
+
+            document.querySelector(
+                "#activityBar"
+            ),
+
+            barOptions
+
+        );
+
+        barChart.render();
 
     }
-
-});
+);
 
 </script>
-
 {% endblock %}

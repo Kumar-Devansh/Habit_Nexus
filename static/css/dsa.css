@@ -2,11 +2,48 @@
    GLOBAL
 ========================= */
 
+:root{
+
+    --bg:#0f172a;
+
+    --card:#111827;
+
+    --card2:#1e293b;
+
+    --text:#ffffff;
+
+    --muted:#94a3b8;
+
+    --input:#0f172a;
+
+    --border:#334155;
+
+    --accent:#2563eb;
+}
+
+body.light-mode{
+
+    --bg:#f8fafc;
+
+    --card:#ffffff;
+
+    --card2:#f1f5f9;
+
+    --text:#111827;
+
+    --muted:#475569;
+
+    --input:#ffffff;
+
+    --border:#d1d5db;
+
+    --accent:#2563eb;
+}
 .dsa-page{
 
     padding:40px;
 
-    color:white;
+    color:var(--text);
 
     animation:fadeIn 1s ease;
 }
@@ -42,7 +79,7 @@
 
 .section-title p{
 
-    color:#94a3b8;
+    color:var(--muted);
 
     font-size:17px;
 }
@@ -64,8 +101,8 @@
     background:
     linear-gradient(
         135deg,
-        #0f172a,
-        #1e293b
+        var(--bg),
+        var(--card2)
     );
 
     margin-bottom:50px;
@@ -130,7 +167,7 @@
 
     text-decoration:none;
 
-    color:white;
+    color:var(--text);
 
     font-weight:600;
 
@@ -139,14 +176,14 @@
 
 .hero-buttons a:first-child{
 
-    background:#2563eb;
+    background:var(--accent);
 }
 
 .hero-buttons a:last-child{
 
-    background:#111827;
+    background:var(--card);
 
-    border:1px solid #334155;
+    border:1px solid var(--border);
 }
 
 .hero-buttons a:hover{
@@ -223,8 +260,8 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
-        #1e293b
+        var(--card),
+        var(--card2)
     );
 
     transition:0.4s;
@@ -251,7 +288,7 @@
     background:
     linear-gradient(
         90deg,
-        #2563eb,
+        var(--accent),
         #9333ea
     );
 }
@@ -272,7 +309,7 @@
 
 .stat-card p{
 
-    color:#94a3b8;
+    color:var(--muted);
 
     font-size:17px;
 }
@@ -290,8 +327,8 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
-        #1e293b
+        var(--card),
+        var(--card2)
     );
 
     margin-bottom:50px;
@@ -315,7 +352,7 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
+        var(--card),
         #172554
     );
 
@@ -342,16 +379,16 @@
 
     border-radius:6px;
 
-    background:#1e293b;
+    background:var(--card2);
 
     transition:0.3s;
 }
 
 .heat-cell.active{
 
-    background:#2563eb;
+    background:var(--accent);
 
-    box-shadow:0 0 12px #2563eb;
+    box-shadow:0 0 12px var(--accent);
 }
 
 .heat-cell:hover{
@@ -372,8 +409,8 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
-        #1e293b
+        var(--card),
+        var(--card2)
     );
 
     margin-bottom:50px;
@@ -398,9 +435,9 @@
 
     border-radius:18px;
 
-    background:#0f172a;
+    background:var(--bg);
 
-    color:white;
+    color:var(--text);
 
     font-size:16px;
 
@@ -415,9 +452,9 @@
 
     border-radius:18px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     cursor:pointer;
 
@@ -458,9 +495,9 @@
 
     border-radius:18px;
 
-    background:#111827;
+    background:var(--card);
 
-    color:white;
+    color:var(--text);
 }
 
 .topic-add-form button{
@@ -469,9 +506,9 @@
 
     border-radius:18px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     cursor:pointer;
 
@@ -497,7 +534,7 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
+        var(--card),
         #172554
     );
 
@@ -540,7 +577,7 @@
 
     overflow:hidden;
 
-    background:#0f172a;
+    background:var(--bg);
 
     margin-bottom:25px;
 }
@@ -554,7 +591,7 @@
     background:
     linear-gradient(
         90deg,
-        #2563eb,
+        var(--accent),
         #9333ea
     );
 
@@ -580,9 +617,9 @@
 
     border-radius:12px;
 
-    background:#0f172a;
+    background:var(--bg);
 
-    color:white;
+    color:var(--text);
 }
 
 .update-form button{
@@ -593,9 +630,9 @@
 
     border-radius:12px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 
     cursor:pointer;
 }
@@ -624,8 +661,8 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
-        #1e293b
+        var(--card),
+        var(--card2)
     );
 
     margin-bottom:50px;
@@ -650,9 +687,9 @@
 
     border-radius:18px;
 
-    background:#0f172a;
+    background:var(--bg);
 
-    color:white;
+    color:var(--text);
 }
 
 .pending-form button{
@@ -663,9 +700,9 @@
 
     border-radius:18px;
 
-    background:#2563eb;
+    background:var(--accent);
 
-    color:white;
+    color:var(--text);
 }
 
 .pending-grid{
@@ -721,8 +758,8 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
-        #1e293b
+        var(--card),
+        var(--card2)
     );
 
     transition:0.4s;
@@ -744,7 +781,7 @@
 
     line-height:1.8;
 
-    color:#94a3b8;
+    color:var(--muted);
 }
 
 /* =========================
@@ -770,11 +807,11 @@
     background:
     linear-gradient(
         135deg,
-        #2563eb,
+        var(--accent),
         #9333ea
     );
 
-    color:white;
+    color:var(--text);
 
     font-size:26px;
 
@@ -884,8 +921,8 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
-        #1e293b
+        var(--card),
+        var(--card2)
     );
 }
 
@@ -911,7 +948,7 @@
     linear-gradient(
         145deg,
         #172554,
-        #1e293b
+        var(--card2)
     );
 
     text-align:center;
@@ -955,7 +992,7 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
+        var(--card),
         #172554
     );
 
@@ -990,7 +1027,7 @@
 
 .level-1{
 
-    background:#2563eb;
+    background:var(--accent);
 }
 
 .level-2{
@@ -1016,7 +1053,7 @@
 .topic-card{
     padding:30px;
     border-radius:28px;
-    background:linear-gradient(145deg,#111827,#172554);
+    background:linear-gradient(145deg,var(--card),#172554);
     transition:0.4s;
     width:100%;
     min-height:320px;
@@ -1039,16 +1076,16 @@
     padding:14px;
     border:none;
     border-radius:12px;
-    background:#0f172a;
-    color:white;
+    background:var(--bg);
+    color:var(--text);
 }
 
 .update-form button{
     padding:14px 18px;
     border:none;
     border-radius:12px;
-    background:#2563eb;
-    color:white;
+    background:var(--accent);
+    color:var(--text);
     cursor:pointer;
     grid-column:span 2;
     width:100%;
@@ -1074,7 +1111,7 @@
     background:
     linear-gradient(
         145deg,
-        #111827,
+        var(--card),
         #172554
     );
 }
@@ -1102,7 +1139,7 @@
     background:
     radial-gradient(
         circle,
-        #2563eb,
+        var(--accent),
         #9333ea
     );
 
@@ -1139,4 +1176,19 @@
     );
 
     border:1px solid #7f1d1d;
+}
+.apexcharts-tooltip {
+
+    background: #000 !important;
+
+    color: #fff !important;
+
+    border: 1px solid #333 !important;
+}
+
+.apexcharts-tooltip-title {
+
+    background: #111 !important;
+
+    color: #fff !important;
 }

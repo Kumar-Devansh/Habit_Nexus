@@ -1,40 +1,40 @@
-const ctx = document.getElementById(
-    'progressChart'
-);
+// const ctx = document.getElementById(
+//     'progressChart'
+// );
 
-if(ctx){
+// if(ctx){
 
-    new Chart(ctx, {
+//     new Chart(ctx, {
 
-        type:'line',
+//         type:'line',
 
-        data:{
-            labels:[
-                'Mon',
-                'Tue',
-                'Wed',
-                'Thu',
-                'Fri',
-                'Sat',
-                'Sun'
-            ],
+//         data:{
+//             labels:[
+//                 'Mon',
+//                 'Tue',
+//                 'Wed',
+//                 'Thu',
+//                 'Fri',
+//                 'Sat',
+//                 'Sun'
+//             ],
 
-            datasets:[{
+//             datasets:[{
 
-                label:'Progress',
+//                 label:'Progress',
 
-                data:[
-                    20,
-                    40,
-                    55,
-                    70,
-                    85,
-                    60,
-                    95
-                ],
+//                 data:[
+//                     20,
+//                     40,
+//                     55,
+//                     70,
+//                     85,
+//                     60,
+//                     95
+//                 ],
 
-                tension:0.4
-            }]
-        }
-    });
-}
+//                 tension:0.4
+//             }]
+//         }
+//     });
+// }

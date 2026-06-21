@@ -7,8 +7,7 @@
     href="{{ url_for('static', filename='css/dsa.css') }}"
 >
 
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.1/dist/apexcharts.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -642,11 +641,9 @@ leetcode_data["data"]["matchedUser"]["profile"]
 var radialOptions = {
 
     series:[
-
-        {{ easy_count }},
-        {{ medium_count }},
-        {{ hard_count }}
-
+        {{ easy_count|default(0) }},
+        {{ medium_count|default(0) }},
+        {{ hard_count|default(0) }}
     ],
 
     chart:{
@@ -683,7 +680,7 @@ var barOptions = {
 
         name:'Solved',
 
-        data:{{ weekly_counts|tojson }}
+        data: {{ weekly_counts|default([])|tojson }}
     }],
 
     chart:{
@@ -699,9 +696,26 @@ var barOptions = {
 
     xaxis:{
 
-        categories:
-        {{ weekly_labels|tojson }}
+        categories: {{ weekly_labels|default([])|tojson }}
+    },
+    tooltip: {
+
+    theme: "dark",
+
+    style: {
+
+        fontSize: "14px"
+    },
+
+    y: {
+
+        formatter: function(value){
+
+            return value + " Tasks";
+        }
     }
+}
+
 }
 
 var barChart =
@@ -715,5 +729,26 @@ new ApexCharts(
 barChart.render()
 
 </script>
+
+<script>
+
+const EASY = {{ easy_count }};
+const MEDIUM = {{ medium_count }};
+const HARD = {{ hard_count }};
+
+const WEEKLY_LABELS =
+{{ weekly_labels|tojson }};
+
+const WEEKLY_COUNTS =
+{{ weekly_counts|tojson }};
+
+</script>
+
+<script
+src="{{ url_for(
+    'static',
+    filename='js/dsa_tracker.js'
+) }}"
+></script>
 
 {% endblock %}
