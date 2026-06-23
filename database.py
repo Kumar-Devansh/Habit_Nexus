@@ -257,11 +257,27 @@ def get_db_connection():
 
     if using_postgres():
         if psycopg2 is None:
-            raise RuntimeError("DATABASE_URL is set, but psycopg2-binary is not installed.")
-        kwargs = {}
-        if os.environ.get("DATABASE_SSLMODE"):
-            kwargs["sslmode"] = os.environ["DATABASE_SSLMODE"]
-        connection = psycopg2.connect(DATABASE_URL, **kwargs)
+            raise RuntimeError(
+                "DATABASE_URL is set, but psycopg2-binary is not installed."
+            )
+
+        parsed = urlparse(DATABASE_URL)
+
+        if not parsed.scheme.startswith("postgres"):
+            raise RuntimeError("Invalid PostgreSQL DATABASE_URL")
+
+        kwargs = {
+            "sslmode": os.environ.get("DATABASE_SSLMODE", "require")
+        }
+
+        connection = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            connect_timeout=10,
+            sslmode=os.environ.get("DATABASE_SSLMODE", "require")
+           
+        )
+
         return PostgresConnection(connection)
 
     conn = sqlite3.connect(SQLITE_DATABASE)

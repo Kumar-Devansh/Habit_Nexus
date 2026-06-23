@@ -357,7 +357,12 @@ def developer_dashboard():
             (SELECT COUNT(*) FROM routines) AS routines,
             (SELECT COALESCE(SUM(completed), 0) FROM task_logs) AS completions,
             (SELECT COUNT(*) FROM friends) AS friendships,
-            (SELECT COUNT(*) FROM suggestions WHERE status='new') AS new_suggestions
+            (SELECT COUNT(*) FROM suggestions WHERE status='new') AS new_suggestions,
+            (SELECT COALESCE(SUM(latest), 0) FROM (
+                SELECT MAX(solved_count) AS latest
+                FROM dsa_history
+                GROUP BY user_id
+            )) AS dsa_solved
         """,
         (seven_days_ago.isoformat(),)
     ).fetchone()
@@ -400,7 +405,11 @@ def developer_dashboard():
             users.id, users.username, users.email, users.public_id, users.profile_image,
             users.is_active, users.is_developer, users.created_at, users.last_login_at,
             (SELECT COUNT(*) FROM routines WHERE user_id=users.id) AS routines,
-            (SELECT COALESCE(SUM(completed), 0) FROM dsa_topics WHERE user_id=users.id) AS dsa_solved
+            COALESCE(
+                (SELECT MAX(solved_count) FROM dsa_history WHERE user_id=users.id),
+                (SELECT SUM(completed) FROM dsa_topics WHERE user_id=users.id),
+                0
+            ) AS dsa_solved
         FROM users ORDER BY users.id DESC
         """
     ).fetchall()
@@ -1876,7 +1885,7 @@ def friends_hub():
             ).fetchone()
             request_state = conn.execute(
                 """
-                SELECT sender_id, receiver_id, status
+                SELECT id, sender_id, receiver_id, status
                 FROM friend_requests
                 WHERE status='pending'
                 AND ((sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?))
@@ -1890,6 +1899,7 @@ def friends_hub():
                 search_result["relationship"] = "sent"
             elif request_state:
                 search_result["relationship"] = "received"
+                search_result["request_id"] = request_state["id"]
             else:
                 search_result["relationship"] = "available"
         else:
@@ -2261,6 +2271,34 @@ def accept_request(request_id):
 
     conn.close()
 
+    return redirect("/friends-hub")
+
+
+# =========================================
+# REJECT REQUEST
+# =========================================
+
+@app.route("/reject-request/<int:request_id>", methods=["POST"])
+def reject_request(request_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db_connection()
+
+    conn.execute(
+        """
+        DELETE FROM friend_requests
+        WHERE id=?
+        AND receiver_id=?
+        AND status='pending'
+        """,
+        (request_id, session["user_id"])
+    )
+    conn.commit()
+    conn.close()
+
+    flash("Friend request rejected.", "success")
     return redirect("/friends-hub")
 
 

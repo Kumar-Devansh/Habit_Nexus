@@ -5,7 +5,7 @@
 {% block content %}
 <main class="developer-console">
     <header class="developer-header">
-        <div><span>Protected workspace</span><h1>Developer console</h1><p>Monitor real growth, control account access, review suggestions, and publish landing-page information.</p></div>
+        <div><span>Protected workspace</span><h1>Developer console</h1><p>Monitor real growth, control account access, review suggestions, publish notifications, and manage landing-page information.</p></div>
         <a href="{{ url_for('home') }}" target="_blank" rel="noopener">Open landing page</a>
     </header>
 
@@ -16,7 +16,7 @@
         <article><span>New this week</span><strong>{{ metrics.new_users }}</strong><small>Registrations in 7 days</small></article>
         <article><span>Routines</span><strong>{{ metrics.routines }}</strong><small>{{ metrics.completions }} logged completions</small></article>
         <article><span>Friendships</span><strong>{{ metrics.friendships }}</strong><small>Accepted connections</small></article>
-        <article><span>New suggestions</span><strong>{{ metrics.new_suggestions }}</strong><small>Waiting for review</small></article>
+        <article><span>New suggestions</span><strong>{{ metrics.new_suggestions }}</strong><small>{{ metrics.dsa_solved }} synced DSA solves</small></article>
     </section>
 
     <section class="developer-chart-grid">
@@ -96,7 +96,7 @@
     </section>
 
     <section class="developer-panel" id="suggestions">
-        <header><div><span>Product feedback</span><h2>Suggestions</h2><p>Review ideas submitted from the public landing page.</p></div></header>
+        <header><div><span>Product feedback</span><h2>Suggestions</h2><p>Review ideas submitted from the public landing page. Resolved items stay here as a record.</p></div></header>
         {% if suggestions %}<div class="developer-suggestion-list">
             {% for suggestion in suggestions %}
             <article>
@@ -108,12 +108,6 @@
                         <select name="status" aria-label="Suggestion status"><option value="new" {% if suggestion.status == 'new' %}selected{% endif %}>New</option><option value="reviewed" {% if suggestion.status == 'reviewed' %}selected{% endif %}>Reviewed</option><option value="resolved" {% if suggestion.status == 'resolved' %}selected{% endif %}>Resolved</option></select>
                         <button type="submit">Update status</button>
                     </form>
-                    {% if suggestion.status == 'resolved' %}
-                    <form method="POST" action="{{ url_for('developer_delete_suggestion', suggestion_id=suggestion.id) }}">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="developer-danger-button">Remove resolved</button>
-                    </form>
-                    {% endif %}
                 </div>
             </article>
             {% endfor %}

@@ -31,10 +31,16 @@
                     <img src="{{ request.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="{{ request.username }} profile picture">
                     <div><strong>{{ request.username }}</strong><span>{{ request.college or 'Engineering student' }}</span></div>
                 </a>
-                <form method="POST" action="{{ url_for('accept_request', request_id=request.id) }}">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="network-button network-button-primary">Accept request</button>
-                </form>
+                <div class="network-card-actions">
+                    <form method="POST" action="{{ url_for('accept_request', request_id=request.id) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="network-button network-button-primary">Accept request</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('reject_request', request_id=request.id) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="network-button network-button-secondary">Reject</button>
+                    </form>
+                </div>
             </article>
             {% endfor %}
         </div>
@@ -123,7 +129,14 @@
                 {% elif search_result.relationship == 'sent' %}
                 <span class="network-pill">Request sent</span>
                 {% elif search_result.relationship == 'received' %}
-                <span class="network-pill">They requested you</span>
+                <form method="POST" action="{{ url_for('accept_request', request_id=search_result.request_id) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="network-button network-button-primary">Accept request</button>
+                </form>
+                <form method="POST" action="{{ url_for('reject_request', request_id=search_result.request_id) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="network-button network-button-secondary">Reject</button>
+                </form>
                 {% else %}
                 <span class="network-pill">Already friends</span>
                 {% endif %}

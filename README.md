@@ -275,6 +275,7 @@ HabitNexus is primarily a server-rendered Flask app. Routes return HTML pages, r
 | `GET, POST` | `/search-users` | Search users by public Student ID. |
 | `POST` | `/send-request/<user_id>` | Send friend request. |
 | `POST` | `/accept-request/<request_id>` | Accept friend request. |
+| `POST` | `/reject-request/<request_id>` | Reject friend request. |
 | `POST` | `/remove-friend/<friend_id>` | Remove friend. |
 | `GET` | `/profile/<user_id>` | View another user's profile with privacy rules. |
 | `GET` | `/friend-profile/<user_id>` | Friend profile view. |
@@ -314,7 +315,6 @@ Developer routes require a logged-in user with `is_developer=1`.
 | `POST` | `/developer/notifications/<notification_id>/toggle` | Pin or unpin developer notification. |
 | `POST` | `/developer/notifications/<notification_id>/delete` | Delete developer notification. |
 | `POST` | `/developer/suggestions/<suggestion_id>/status` | Mark suggestion as new, reviewed, or resolved. |
-| `POST` | `/developer/suggestions/<suggestion_id>/delete` | Remove resolved suggestion. |
 
 ## Privacy Model
 
@@ -394,4 +394,3 @@ DATABASE_URL="postgresql://user:password@host:5432/database" python3 scripts/mig
 ## License
 
 Add your preferred license before publishing publicly.
-
