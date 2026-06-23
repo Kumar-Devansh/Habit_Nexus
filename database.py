@@ -347,8 +347,8 @@ def init_db():
         )
 
     conn.execute(
-        "UPDATE users SET created_at=COALESCE(created_at, CURRENT_TIMESTAMP)"
-    )
+    "UPDATE users SET created_at = COALESCE(created_at, NOW()::text)"
+)
 
     existing_public_ids = {
         row["public_id"]
