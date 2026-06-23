@@ -95,6 +95,15 @@
     ></script>
     <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+    <script>
+    document.addEventListener("error", function (event) {
+        const image = event.target;
+        if (!image || image.tagName !== "IMG" || image.dataset.fallbackApplied) return;
+        image.dataset.fallbackApplied = "1";
+        image.alt = "";
+        image.src = "{{ url_for('static', filename='images/default-avatar.svg') }}";
+    }, true);
+    </script>
 
 </body>
 

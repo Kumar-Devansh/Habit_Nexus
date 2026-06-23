@@ -16,6 +16,7 @@ import calendar as cal
 import hmac
 import re
 import secrets
+import base64
 from functools import wraps
 from io import StringIO
 import json
@@ -65,6 +66,11 @@ os.makedirs(
 
 ALLOWED_PROFILE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 ALLOWED_PROFILE_MIMES = {"image/png", "image/jpeg", "image/webp"}
+PROFILE_IMAGE_MIME_BY_TYPE = {
+    "png": "image/png",
+    "jpeg": "image/jpeg",
+    "webp": "image/webp",
+}
 
 
 def detect_profile_image_type(uploaded_file):
@@ -77,6 +83,15 @@ def detect_profile_image_type(uploaded_file):
     if header.startswith(b"RIFF") and header[8:12] == b"WEBP":
         return "webp"
     return None
+
+
+def profile_image_data_url(uploaded_file, detected_type):
+    uploaded_file.stream.seek(0)
+    data = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    mime_type = PROFILE_IMAGE_MIME_BY_TYPE[detected_type]
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def public_id_seed(username):
@@ -270,11 +285,14 @@ def ensure_developer_access(conn, user):
 
 
 def session_user_context(user):
+    profile_image = user["profile_image"]
+    if profile_image and profile_image.startswith("data:"):
+        profile_image = None
     return {
         "id": user["id"],
         "username": user["username"],
         "email": user["email"],
-        "profile_image": user["profile_image"],
+        "profile_image": profile_image,
         "is_developer": int(user["is_developer"] or 0),
         "is_active": int(user["is_active"] or 0),
         "public_id": user["public_id"],
@@ -1586,13 +1604,7 @@ def profile():
                 conn.close()
                 return redirect(url_for("profile"))
 
-            filename = f"user-{session['user_id']}-{secrets.token_hex(8)}.{extension}"
-            filepath = os.path.join(
-                app.config["UPLOAD_FOLDER"],
-                filename
-            )
-            uploaded_file.save(filepath)
-            image_path = f"/static/uploads/profile_pictures/{filename}"
+            image_path = profile_image_data_url(uploaded_file, detected_type)
 
         conn.execute(
             """
