@@ -228,7 +228,7 @@ class PostgresConnection:
             cursor.execute(query)
         else:
             cursor.execute(query, params)
-            return PostgresCursor(cursor)
+        return PostgresCursor(cursor)
 
     def commit(self):
         self.connection.commit()
