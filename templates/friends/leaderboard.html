@@ -29,7 +29,7 @@
         {% for user in leaderboard_data[:3] %}
         <article class="podium-card rank-{{ user.rank }} {% if user.is_current_user %}is-you{% endif %}" data-score="{{ user.score }}">
             <span class="podium-rank">#{{ user.rank }}</span>
-            <img src="{{ user.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="{{ user.username }} profile picture">
+            <img src="{{ profile_image_url(user) }}" alt="{{ user.username }} profile picture">
             <h2>{{ user.username }}{% if user.is_current_user %}<small>You</small>{% endif %}</h2>
             <p>{{ user.college or 'Engineering student' }}</p>
             <strong>{{ user.score }}<span>points</span></strong>
@@ -45,7 +45,7 @@
         {% for user in leaderboard_data[3:] %}
         <article class="leaderboard-row {% if user.is_current_user %}is-you{% endif %}" data-score="{{ user.score }}">
             <strong class="leaderboard-rank">#{{ user.rank }}</strong>
-            <a href="{{ url_for('view_profile', user_id=user.id) }}" class="leaderboard-person"><img src="{{ user.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt=""><div><strong>{{ user.username }}</strong><span>{{ user.college or 'Engineering student' }}</span></div></a>
+            <a href="{{ url_for('view_profile', user_id=user.id) }}" class="leaderboard-person"><img src="{{ profile_image_url(user) }}" alt=""><div><strong>{{ user.username }}</strong><span>{{ user.college or 'Engineering student' }}</span></div></a>
             <div class="leaderboard-row-metrics"><span><strong>{{ user.habit_rate }}%</strong> habits</span><span><strong>+{{ user.dsa_growth }}</strong> DSA</span><span><strong>{{ user.streak }}</strong> streak</span></div>
             <strong class="leaderboard-score">{{ user.score }}</strong>
         </article>

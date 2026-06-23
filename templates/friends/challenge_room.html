@@ -25,7 +25,7 @@
         {% for competitor in [current_user, friend] %}
         <article class="challenge-competitor {% if leader == competitor.id %}is-leading{% endif %}">
             <div class="challenge-person">
-                <img src="{{ competitor.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="{{ competitor.username }} profile picture">
+                <img src="{{ profile_image_url(competitor) }}" alt="{{ competitor.username }} profile picture">
                 <div>
                     <span>{{ 'You' if competitor.id == current_user.id else 'Friend' }}</span>
                     <h2>{{ competitor.username }}</h2>

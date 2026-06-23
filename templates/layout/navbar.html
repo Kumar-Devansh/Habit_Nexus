@@ -12,6 +12,6 @@
     </div>
     <div class="navbar-account">
         <button type="button" class="theme-toggle" onclick="toggleMode()" aria-label="Toggle color theme"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
-        <a href="{{ url_for('profile') }}" class="navbar-user"><div><strong>{{ current_user.username }}</strong><span>View profile</span></div><img src="{{ current_user.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="{{ current_user.username }} profile picture"></a>
+        <a href="{{ url_for('profile') }}" class="navbar-user"><div><strong>{{ current_user.username }}</strong><span>View profile</span></div><img src="{{ profile_image_url(current_user) }}" alt="{{ current_user.username }} profile picture"></a>
     </div>
 </header>

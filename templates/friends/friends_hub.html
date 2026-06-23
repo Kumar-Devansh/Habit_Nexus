@@ -28,7 +28,7 @@
             {% for request in requests %}
             <article class="network-request-card">
                 <a href="{{ url_for('view_profile', user_id=request.sender_id) }}" class="network-person">
-                    <img src="{{ request.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="{{ request.username }} profile picture">
+                    <img src="{{ profile_image_url(request) }}" alt="{{ request.username }} profile picture">
                     <div><strong>{{ request.username }}</strong><span>{{ request.college or 'Engineering student' }}</span></div>
                 </a>
                 <div class="network-card-actions">
@@ -59,7 +59,7 @@
             <article class="network-friend-card">
                 <div class="network-friend-header">
                     <a href="{{ url_for('view_profile', user_id=friend.id) }}" class="network-person">
-                        <img src="{{ friend.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="{{ friend.username }} profile picture">
+                        <img src="{{ profile_image_url(friend) }}" alt="{{ friend.username }} profile picture">
                         <div><strong>{{ friend.username }}</strong><span>{{ friend.branch or friend.college or 'Engineering student' }}</span></div>
                     </a>
                     <span class="network-streak">{{ friend.streak }} day streak</span>
@@ -179,7 +179,7 @@
         <div class="network-activity-list">
             {% for activity in activities %}
             <article>
-                <img src="{{ activity.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="">
+                <img src="{{ profile_image_url(activity) }}" alt="">
                 <div>
                     <div class="network-activity-meta"><strong>{{ activity.title }}</strong><span>{{ activity.kind }}</span></div>
                     <p><b>{{ activity.username }}</b> — {{ activity.activity }}</p>

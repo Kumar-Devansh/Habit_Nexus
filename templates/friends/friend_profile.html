@@ -8,7 +8,7 @@
 <div class="profile-header">
 
     <img
-        src="{{ friend.profile_image or url_for('static', filename='images/default-avatar.svg') }}"
+        src="{{ profile_image_url(friend) }}"
         class="profile-avatar"
         alt="Profile Picture"
     >

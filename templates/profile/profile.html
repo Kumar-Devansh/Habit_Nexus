@@ -9,7 +9,7 @@
 
     <section class="profile-editor-hero">
         <div class="profile-avatar-editor">
-            <img id="profilePreview" src="{{ user.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="Profile preview">
+            <img id="profilePreview" src="{{ profile_image_url(user) }}" alt="Profile preview">
             <label for="profileImage">Change photo</label>
         </div>
         <div><span>{{ user.public_id }}</span><h2>{{ user.username }}</h2><p>{{ user.bio or 'Add a short introduction that tells other students what you are working toward.' }}</p></div>

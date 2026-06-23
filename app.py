@@ -94,6 +94,26 @@ def profile_image_data_url(uploaded_file, detected_type):
     return f"data:{mime_type};base64,{encoded}"
 
 
+def default_avatar_url():
+    return url_for("static", filename="images/default-avatar.svg")
+
+
+def profile_image_url(user):
+    if not user:
+        return default_avatar_url()
+    user_id = None
+    for key in ("profile_user_id", "user_id", "sender_id", "id"):
+        try:
+            user_id = user[key]
+        except (KeyError, IndexError, TypeError):
+            user_id = getattr(user, key, None)
+        if user_id:
+            break
+    if not user_id:
+        return default_avatar_url()
+    return url_for("profile_image", user_id=user_id)
+
+
 def public_id_seed(username):
     seed = re.sub(r"[^a-z0-9]+", "_", username.strip().lower())
     seed = seed.strip("_") or "student"
@@ -313,6 +333,46 @@ def csrf_token():
 
 
 app.jinja_env.globals["csrf_token"] = csrf_token
+app.jinja_env.globals["profile_image_url"] = profile_image_url
+
+
+@app.route("/profile-image/<int:user_id>")
+def profile_image(user_id):
+    conn = get_db_connection()
+    user = conn.execute(
+        "SELECT profile_image FROM users WHERE id=?",
+        (user_id,)
+    ).fetchone()
+    conn.close()
+
+    image_value = user["profile_image"] if user else None
+    if not image_value:
+        return redirect(default_avatar_url())
+
+    if image_value.startswith("data:"):
+        match = re.fullmatch(r"data:(image/(?:png|jpeg|webp));base64,(.+)", image_value, re.DOTALL)
+        if not match:
+            return redirect(default_avatar_url())
+        try:
+            image_bytes = base64.b64decode(match.group(2), validate=True)
+        except ValueError:
+            return redirect(default_avatar_url())
+        response = Response(image_bytes, mimetype=match.group(1))
+        response.cache_control.private = True
+        response.cache_control.no_cache = True
+        response.cache_control.max_age = 0
+        return response
+
+    if image_value.startswith("/static/"):
+        local_path = os.path.join(app.root_path, image_value.lstrip("/"))
+        if os.path.exists(local_path):
+            return redirect(image_value)
+        return redirect(default_avatar_url())
+
+    if image_value.startswith(("http://", "https://")):
+        return redirect(image_value)
+
+    return redirect(default_avatar_url())
 
 
 @app.before_request
@@ -2093,6 +2153,7 @@ def friends_hub():
 
         SELECT
             friend_requests.id,
+            users.id AS profile_user_id,
             users.username,
             users.profile_image,
             users.college,
@@ -2116,6 +2177,7 @@ def friends_hub():
     routine_activity = conn.execute(
         """
         SELECT
+            users.id AS profile_user_id,
             users.username,
             users.profile_image,
             'Routine completed' AS title,
@@ -2143,6 +2205,7 @@ def friends_hub():
     dsa_activity = conn.execute(
         """
         SELECT
+            users.id AS profile_user_id,
             users.username,
             users.profile_image,
             'DSA progress logged' AS title,
@@ -2166,6 +2229,7 @@ def friends_hub():
     challenge_activity = conn.execute(
         """
         SELECT
+            challenger.id AS profile_user_id,
             challenger.username,
             challenger.profile_image,
             'Challenge started' AS title,
@@ -2192,6 +2256,7 @@ def friends_hub():
     connection_activity = conn.execute(
         """
         SELECT
+            users.id AS profile_user_id,
             users.username,
             users.profile_image,
             'New connection' AS title,

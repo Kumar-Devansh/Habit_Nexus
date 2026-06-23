@@ -33,7 +33,7 @@
                 <tbody>
                     {% for user in users %}
                     <tr data-user-search="{{ (user.username + ' ' + user.email + ' ' + (user.public_id or ''))|lower }}">
-                        <td><div class="developer-user"><img src="{{ user.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt=""><div><strong>{{ user.username }}</strong><span>{{ user.public_id }}</span></div>{% if user.is_developer %}<b>Developer</b>{% endif %}</div></td>
+                        <td><div class="developer-user"><img src="{{ profile_image_url(user) }}" alt=""><div><strong>{{ user.username }}</strong><span>{{ user.public_id }}</span></div>{% if user.is_developer %}<b>Developer</b>{% endif %}</div></td>
                         <td>{{ user.created_at[:10] if user.created_at else 'Unknown' }}</td>
                         <td>{{ user.last_login_at[:10] if user.last_login_at else 'Never' }}</td>
                         <td>{{ user.routines }}</td><td>{{ user.dsa_solved }}</td>

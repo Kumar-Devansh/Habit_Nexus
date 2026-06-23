@@ -13,7 +13,7 @@
         <div class="public-profile-identity">
             <div class="public-profile-avatar-wrap">
                 <img
-                    src="{{ user.profile_image or url_for('static', filename='images/default-avatar.svg') }}"
+                    src="{{ profile_image_url(user) }}"
                     alt="{{ user.username }} profile picture"
                     class="public-profile-avatar"
                 >
