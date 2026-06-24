@@ -212,6 +212,10 @@ class PostgresCursor:
     def __init__(self, cursor):
         self.cursor = cursor
 
+    @property
+    def rowcount(self):
+        return self.cursor.rowcount
+
     def fetchone(self):
         return self.cursor.fetchone()
 
