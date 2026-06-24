@@ -52,6 +52,7 @@
                 <a href="{{ url_for('profile') }}" class="public-profile-button public-profile-button-primary">Edit profile</a>
                 {% elif is_friend %}
                 <form method="POST" action="{{ url_for('challenge_friend', friend_id=user.id) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="public-profile-button public-profile-button-primary">Challenge user</button>
                 </form>
                 {% else %}

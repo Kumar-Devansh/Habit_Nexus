@@ -13,7 +13,7 @@
         </div>
         <div class="network-card-actions">
             {% if relationship == 'available' %}
-            <form method="POST" action="{{ url_for('send_request', user_id=user.id) }}">
+            <form method="POST" action="{{ url_for('send_request', user_id=user.id) }}" data-preview-request-form>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="network-button network-button-primary">Send friend request</button>
             </form>
@@ -24,6 +24,49 @@
             {% endif %}
             <a href="{{ url_for('friends_hub') }}" class="network-button network-button-secondary">Back to friends</a>
         </div>
+        <p class="network-action-message" data-preview-message hidden></p>
     </section>
 </main>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("[data-preview-request-form]");
+    const message = document.querySelector("[data-preview-message]");
+    if (!form || !message) return;
+
+    function showMessage(text, isError) {
+        message.textContent = text;
+        message.hidden = false;
+        message.classList.toggle("is-error", Boolean(isError));
+    }
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const button = form.querySelector("button[type='submit']");
+        if (button) button.disabled = true;
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+                headers: {
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+            const data = await response.json();
+            showMessage(data.message || "Request updated.", !data.ok);
+            if (data.ok) {
+                const pill = document.createElement("span");
+                pill.className = "network-pill";
+                pill.textContent = "Friend request sent";
+                form.replaceWith(pill);
+            } else if (button) {
+                button.disabled = false;
+            }
+        } catch (error) {
+            showMessage("Could not send request. Please try again.", true);
+            if (button) button.disabled = false;
+        }
+    });
+});
+</script>
 {% endblock %}

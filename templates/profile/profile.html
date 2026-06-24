@@ -12,11 +12,13 @@
             <img id="profilePreview" src="{{ profile_image_url(user) }}" alt="Profile preview">
             <label for="profileImage">Change photo</label>
         </div>
-        <div><span>{{ user.public_id }}</span><h2>{{ user.username }}</h2><p>{{ user.bio or 'Add a short introduction that tells other students what you are working toward.' }}</p></div>
-        <div class="profile-completion"><strong>{{ completion_percentage }}%</strong><span>Profile complete</span><div><i style="width: {{ completion_percentage }}%"></i></div></div>
+        <div><span>{{ user.public_id }}</span><h2>{{ user.username }}</h2><p data-profile-bio>{{ user.bio or 'Add a short introduction that tells other students what you are working toward.' }}</p></div>
+        <div class="profile-completion"><strong data-profile-completion>{{ completion_percentage }}%</strong><span>Profile complete</span><div><i data-profile-completion-bar style="width: {{ completion_percentage }}%"></i></div></div>
     </section>
 
-    <form method="POST" enctype="multipart/form-data" class="profile-editor-form">
+    <p class="account-action-message" data-profile-message hidden></p>
+
+    <form method="POST" enctype="multipart/form-data" class="profile-editor-form" data-profile-form>
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <input id="profileImage" type="file" name="profile_image" accept="image/png,image/jpeg,image/webp" hidden>
 
@@ -51,6 +53,26 @@
 document.addEventListener("DOMContentLoaded", function () {
     const input = document.getElementById("profileImage");
     const preview = document.getElementById("profilePreview");
+    const form = document.querySelector("[data-profile-form]");
+    const message = document.querySelector("[data-profile-message]");
+
+    function showMessage(text, isError) {
+        if (!message || !text) return;
+        message.textContent = text;
+        message.hidden = false;
+        message.classList.toggle("is-error", Boolean(isError));
+        window.clearTimeout(showMessage.timer);
+        showMessage.timer = window.setTimeout(function () {
+            message.hidden = true;
+        }, 2800);
+    }
+
+    function updateShellProfileImage(url) {
+        document.querySelectorAll(".sidebar-account img, .navbar-user img, .settings-summary img").forEach(function (image) {
+            image.src = url;
+        });
+    }
+
     input.addEventListener("change", function () {
         const file = input.files[0];
         if (!file) return;
@@ -60,6 +82,45 @@ document.addEventListener("DOMContentLoaded", function () {
         preview.dataset.previewUrl = objectUrl;
         preview.src = objectUrl;
     });
+
+    if (form) {
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const button = form.querySelector("button[type='submit']");
+            if (button) button.disabled = true;
+            try {
+                const response = await fetch(form.action || window.location.href, {
+                    method: "POST",
+                    body: new FormData(form),
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+                const data = await response.json();
+                if (!data.ok) {
+                    showMessage(data.message || "Could not update profile.", true);
+                    return;
+                }
+                if (data.profile_image_url) {
+                    preview.src = data.profile_image_url;
+                    updateShellProfileImage(data.profile_image_url);
+                }
+                const bio = document.querySelector("[data-profile-bio]");
+                if (bio) bio.textContent = data.bio || "Add a short introduction that tells other students what you are working toward.";
+                const completion = document.querySelector("[data-profile-completion]");
+                const completionBar = document.querySelector("[data-profile-completion-bar]");
+                if (completion) completion.textContent = data.completion_percentage + "%";
+                if (completionBar) completionBar.style.width = data.completion_percentage + "%";
+                input.value = "";
+                showMessage(data.message || "Profile updated.", false);
+            } catch (error) {
+                showMessage("Could not update profile. Please try again.", true);
+            } finally {
+                if (button) button.disabled = false;
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

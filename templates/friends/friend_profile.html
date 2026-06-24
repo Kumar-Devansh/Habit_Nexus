@@ -141,6 +141,7 @@
     </p>
 
     <form method="POST" action="{{ url_for('remove_friend', friend_id=friend.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="remove-btn">Remove Friend</button>
     </form>
 

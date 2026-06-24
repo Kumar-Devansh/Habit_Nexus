@@ -144,7 +144,7 @@
             <h2>{% if profile %}LeetCode profile: {{ profile.leetcode_username }}{% else %}Connect LeetCode{% endif %}</h2>
             <p>{% if sync_available %}Live public stats were loaded successfully.{% elif latest_sync %}Live sync is unavailable; the page is showing your last saved snapshot.{% else %}Add your username to populate difficulty, growth, and topic insights.{% endif %}</p>
         </div>
-        <form method="POST" action="{{ url_for('save_leetcode') }}" class="dsa-sync-form">
+        <form method="POST" action="{{ url_for('save_leetcode') }}" class="dsa-sync-form" data-dsa-sync-form>
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <input type="text" name="leetcode_username" placeholder="LeetCode username" value="{{ profile.leetcode_username if profile else '' }}" required>
             <button type="submit" class="dsa-button dsa-button-primary">Save and sync</button>
@@ -163,6 +163,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const updateTopicBase = "{{ url_for('update_dsa_topic', id=0) }}".replace(/0$/, "");
     const deleteTopicBase = "{{ url_for('delete_dsa_topic', id=0) }}".replace(/0$/, "");
     const deletePendingBase = "{{ url_for('delete_pending_topic', id=0) }}".replace(/0$/, "");
+    const syncForm = document.querySelector("[data-dsa-sync-form]");
 
     function topicProgress(topic) {
         const completed = Math.max(parseInt(topic.completed, 10) || 0, 0);
@@ -386,6 +387,43 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
         submitDsaForm(form);
     });
+
+    if (syncForm) {
+        syncForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const button = syncForm.querySelector("button[type='submit']");
+            if (button) {
+                button.disabled = true;
+                button.textContent = "Syncing...";
+            }
+            showMessage("Checking LeetCode and saving profile...", false);
+            try {
+                const response = await fetch(syncForm.action, {
+                    method: "POST",
+                    body: new FormData(syncForm),
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+                const data = await response.json();
+                showMessage(data.message || "LeetCode sync updated.", !data.ok);
+                if (data.ok && data.redirect_url) {
+                    window.setTimeout(function () {
+                        window.location.href = data.redirect_url;
+                    }, 450);
+                    return;
+                }
+            } catch (error) {
+                showMessage("Could not sync LeetCode right now. Please try again.", true);
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = "Save and sync";
+                }
+            }
+        });
+    }
 
     if (!window.ApexCharts) return;
 

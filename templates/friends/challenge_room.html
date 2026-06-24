@@ -16,6 +16,7 @@
         <div class="challenge-meta"><span>Challenge #{{ challenge.id }}</span><small>Started {{ challenge.created_at }}</small></div>
         {% else %}
         <form method="POST" action="{{ url_for('challenge_friend', friend_id=friend.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="challenge-primary-button">Start challenge</button>
         </form>
         {% endif %}

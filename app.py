@@ -1093,6 +1093,13 @@ def forgot_password():
                 error = "No account matches that email and Student ID."
             conn.close()
 
+        if wants_json_response():
+            return jsonify({
+                "ok": success is not None,
+                "message": success or error,
+                "redirect_url": url_for("login") if success else None
+            })
+
     return render_template(
         "auth/forgot_password.html",
         error=error,
@@ -1688,6 +1695,9 @@ def profile():
 
         links = (github, linkedin, leetcode)
         if any(link and not link.startswith(("http://", "https://")) for link in links):
+            if wants_json_response():
+                conn.close()
+                return jsonify({"ok": False, "message": "Professional links must start with http:// or https://."})
             flash("Professional links must start with http:// or https://.", "error")
             conn.close()
             return redirect(url_for("profile"))
@@ -1705,6 +1715,9 @@ def profile():
                 or uploaded_file.mimetype not in ALLOWED_PROFILE_MIMES
                 or detected_type != expected_type
             ):
+                if wants_json_response():
+                    conn.close()
+                    return jsonify({"ok": False, "message": "Upload a PNG, JPG, or WebP profile image."})
                 flash("Upload a PNG, JPG, or WebP profile image.", "error")
                 conn.close()
                 return redirect(url_for("profile"))
@@ -1741,8 +1754,35 @@ def profile():
         conn.commit()
         updated_user = dict(user)
         updated_user["profile_image"] = image_path
+        updated_user["bio"] = bio
+        updated_user["college"] = college
+        updated_user["branch"] = branch
+        updated_user["year"] = year
+        updated_user["github"] = github
+        updated_user["linkedin"] = linkedin
+        updated_user["leetcode"] = leetcode
         refresh_session_user(updated_user)
+        profile_fields = [
+            image_path,
+            bio,
+            college,
+            branch,
+            year,
+            github,
+            linkedin,
+            leetcode
+        ]
+        completion_percentage = int((sum(1 for field in profile_fields if field) / len(profile_fields)) * 100)
+        image_url = url_for("profile_image", user_id=session["user_id"], v=secrets.token_urlsafe(6))
         conn.close()
+        if wants_json_response():
+            return jsonify({
+                "ok": True,
+                "message": "Public profile updated.",
+                "profile_image_url": image_url,
+                "bio": bio,
+                "completion_percentage": completion_percentage
+            })
         flash("Public profile updated.", "success")
         return redirect(url_for("profile"))
 
@@ -1797,11 +1837,18 @@ def settings():
     if request.method == "POST":
         action = request.form.get("action")
         current_password = request.form.get("current_password", "")
+        message = "Settings updated."
+        ok = True
+        category = "success"
+        redirect_url = url_for("settings")
+        extra = {}
 
         if action == "suggestion":
             message = request.form.get("message", "").strip()[:1200]
             if len(message) < 10:
-                flash("Suggestion must be at least 10 characters.", "error")
+                message = "Suggestion must be at least 10 characters."
+                ok = False
+                category = "error"
             else:
                 conn.execute(
                     """
@@ -1811,22 +1858,32 @@ def settings():
                     (session["user_id"], user["username"], user["email"], message)
                 )
                 conn.commit()
-                flash("Suggestion sent to the developer.", "success")
+                message = "Suggestion sent to the developer."
             conn.close()
-            return redirect(url_for("settings"))
+            if wants_json_response():
+                return jsonify({"ok": ok, "message": message, "action": action})
+            flash(message, category)
+            return redirect(redirect_url)
 
         if not check_password_hash(user["password"], current_password):
-            flash("Current password is incorrect.", "error")
             conn.close()
-            return redirect(url_for("settings"))
+            message = "Current password is incorrect."
+            if wants_json_response():
+                return jsonify({"ok": False, "message": message, "action": action})
+            flash(message, "error")
+            return redirect(redirect_url)
 
         if action == "account":
             username = request.form.get("username", "").strip()
             email = request.form.get("email", "").strip().lower()
             if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _.-]{2,29}", username):
-                flash("Username must be 3-30 valid characters.", "error")
+                message = "Username must be 3-30 valid characters."
+                ok = False
+                category = "error"
             elif not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
-                flash("Enter a valid email address.", "error")
+                message = "Enter a valid email address."
+                ok = False
+                category = "error"
             else:
                 duplicate = conn.execute(
                     """
@@ -1836,7 +1893,9 @@ def settings():
                     (session["user_id"], username, email)
                 ).fetchone()
                 if duplicate:
-                    flash("That username or email is already in use.", "error")
+                    message = "That username or email is already in use."
+                    ok = False
+                    category = "error"
                 else:
                     conn.execute(
                         "UPDATE users SET username=?, email=? WHERE id=?",
@@ -1847,48 +1906,68 @@ def settings():
                     updated_user["username"] = username
                     updated_user["email"] = email
                     refresh_session_user(updated_user)
-                    flash("Account details updated.", "success")
+                    message = "Account details updated."
+                    extra = {"username": username, "email": email}
 
         elif action == "password":
             new_password = request.form.get("new_password", "")
             confirm_password = request.form.get("confirm_password", "")
             if len(new_password) < 8:
-                flash("New password must be at least 8 characters.", "error")
+                message = "New password must be at least 8 characters."
+                ok = False
+                category = "error"
             elif new_password != confirm_password:
-                flash("New passwords do not match.", "error")
+                message = "New passwords do not match."
+                ok = False
+                category = "error"
             elif check_password_hash(user["password"], new_password):
-                flash("Choose a password different from your current password.", "error")
+                message = "Choose a password different from your current password."
+                ok = False
+                category = "error"
             else:
                 conn.execute(
                     "UPDATE users SET password=? WHERE id=?",
                     (generate_password_hash(new_password), session["user_id"])
                 )
                 conn.commit()
-                flash("Password changed successfully.", "success")
+                message = "Password changed successfully."
         elif action == "delete_data":
             confirmation = request.form.get("confirmation", "").strip()
             if confirmation != "DELETE DATA":
-                flash("Type DELETE DATA exactly to clear your progress.", "error")
+                message = "Type DELETE DATA exactly to clear your progress."
+                ok = False
+                category = "error"
             else:
                 delete_user_progress(conn, session["user_id"])
                 conn.commit()
-                flash("Your progress, challenges, and activity data were deleted.", "success")
+                message = "Your progress, challenges, and activity data were deleted."
         elif action == "delete_account":
             confirmation = request.form.get("confirmation", "").strip()
             if confirmation != "DELETE ACCOUNT":
-                flash("Type DELETE ACCOUNT exactly to delete your profile.", "error")
+                message = "Type DELETE ACCOUNT exactly to delete your profile."
+                ok = False
+                category = "error"
             else:
                 delete_user_account(conn, session["user_id"])
                 conn.commit()
                 conn.close()
                 session.clear()
+                if wants_json_response():
+                    return jsonify({"ok": True, "message": "Your account and profile were deleted.", "redirect_url": url_for("login"), "action": action})
                 flash("Your account and profile were deleted.", "success")
                 return redirect(url_for("login"))
         else:
-            flash("Unknown settings action.", "error")
+            message = "Unknown settings action."
+            ok = False
+            category = "error"
 
         conn.close()
-        return redirect(url_for("settings"))
+        if wants_json_response():
+            payload = {"ok": ok, "message": message, "action": action}
+            payload.update(extra)
+            return jsonify(payload)
+        flash(message, category)
+        return redirect(redirect_url)
 
     conn.close()
 
@@ -2581,11 +2660,12 @@ def reject_request(request_id):
         (request_id, session["user_id"])
     )
     conn.commit()
+    rejected = bool(cursor.rowcount)
+    message = "Friend request rejected." if rejected else "Friend request was already handled."
     conn.close()
 
-    message = "Friend request rejected." if cursor.rowcount else "Friend request was already handled."
     if wants_json_response():
-        return jsonify({"ok": bool(cursor.rowcount), "action": "reject-request", "id": request_id, "message": message})
+        return jsonify({"ok": rejected, "action": "reject-request", "id": request_id, "message": message})
 
     flash(message, "success")
     return redirect("/friends-hub")
@@ -2632,15 +2712,17 @@ def remove_friend(friend_id):
     ))
 
     conn.commit()
+    removed = bool(cursor.rowcount)
+    message = "Friend removed." if removed else "Friend was already removed."
 
     conn.close()
 
     if wants_json_response():
         return jsonify({
-            "ok": bool(cursor.rowcount),
+            "ok": removed,
             "action": "remove-friend",
             "id": friend_id,
-            "message": "Friend removed." if cursor.rowcount else "Friend was already removed."
+            "message": message
         })
 
     return redirect("/friends-hub")
@@ -3678,9 +3760,12 @@ def save_leetcode():
 
     user_id = session["user_id"]
 
-    username = request.form[
-        "leetcode_username"
-    ].strip()
+    username = request.form.get("leetcode_username", "").strip()
+    if not username:
+        message = "Enter your LeetCode username."
+        if wants_json_response():
+            return jsonify({"ok": False, "message": message})
+        return message, 400
 
     # Convert profile URL -> username
     if "leetcode.com" in username:
@@ -3721,6 +3806,8 @@ def save_leetcode():
             not data.get("data")
             or not data["data"].get("matchedUser")
         ):
+            if wants_json_response():
+                return jsonify({"ok": False, "message": "Invalid LeetCode username."})
             return "Invalid LeetCode Username"
 
     except Exception as e:
@@ -3730,6 +3817,8 @@ def save_leetcode():
             e
         )
 
+        if wants_json_response():
+            return jsonify({"ok": False, "message": "Unable to verify LeetCode username right now."})
         return "Unable to verify LeetCode username"
 
     # -------------------------
@@ -3784,6 +3873,14 @@ def save_leetcode():
         "VALID LEETCODE USER:",
         username
     )
+
+    if wants_json_response():
+        return jsonify({
+            "ok": True,
+            "message": "LeetCode username saved. Refreshing latest DSA data...",
+            "username": username,
+            "redirect_url": url_for("dsa_tracker")
+        })
 
     return redirect("/dsa_tracker")
     
@@ -3955,13 +4052,14 @@ def delete_dsa_topic(id):
     )
 
     conn.commit()
+    deleted = bool(cursor.rowcount)
 
     if wants_json_response():
         response = jsonify({
-            "ok": bool(cursor.rowcount),
+            "ok": deleted,
             "action": "delete-topic",
             "id": id,
-            "message": "Topic deleted." if cursor.rowcount else "Topic was already removed."
+            "message": "Topic deleted." if deleted else "Topic was already removed."
         })
         conn.close()
         return response
@@ -4041,13 +4139,14 @@ def delete_pending_topic(id):
     )
 
     conn.commit()
+    deleted = bool(cursor.rowcount)
 
     if wants_json_response():
         response = jsonify({
-            "ok": bool(cursor.rowcount),
+            "ok": deleted,
             "action": "delete-pending-topic",
             "id": id,
-            "message": "Backlog topic removed." if cursor.rowcount else "Backlog topic was already removed."
+            "message": "Backlog topic removed." if deleted else "Backlog topic was already removed."
         })
         conn.close()
         return response
