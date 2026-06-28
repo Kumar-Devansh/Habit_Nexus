@@ -481,7 +481,7 @@ def home():
     landing_updates = conn.execute(
         """
         SELECT * FROM landing_content
-        WHERE is_published=1
+        WHERE is_published = TRUE
         ORDER BY display_order, id DESC
         """
     ).fetchall()
@@ -547,7 +547,7 @@ def developer_dashboard():
         """
         SELECT
             (SELECT COUNT(*) FROM users) AS users,
-            (SELECT COUNT(*) FROM users WHERE is_active=1) AS active_users,
+            (SELECT COUNT(*) FROM users WHERE is_active=TRUE) AS active_users,
             (SELECT COUNT(*) FROM users WHERE SUBSTR(created_at, 1, 10)>=?) AS new_users,
             (SELECT COUNT(*) FROM routines) AS routines,
             (SELECT COALESCE(SUM(completed), 0) FROM task_logs) AS completions,
